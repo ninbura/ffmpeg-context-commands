@@ -18,7 +18,7 @@ set relativePath=%~dp0
 set relevantPath=%relativePath:~0,-1%
 set /p step=<"%relativePath%Setup\Step.txt"
 
-PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\CheckChoco.ps1" -relevantPath "%relevantPath%"
+PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\CheckRequiredPackages.ps1" -relevantPath "%relevantPath%"
 
 if %step% == 1 (
     (echo 1) > "%relativePath%Setup\Step.txt"
