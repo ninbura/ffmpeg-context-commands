@@ -34,28 +34,46 @@ if($step -eq 0){
         $answer = Read-Host "Chocolatey, git, and FFmpeg will be installed / updated [y=yes, n=no]"
         Write-Host ""
 
-        if($answer.ToUpper() = "Y"){
-            Set-Content -Path "$relevantPath\Setup\Step.txt" -Value "1" | Out-Null
-            Write-Host "Installing required packages..."
-        }
-        else{
-            Write-Host "Required packages were not installed, process is exiting."
+        while($true){
+            if($answer.ToUpper() -eq "Y"){
+                Set-Content -Path "$relevantPath\Setup\Step.txt" -Value "1" | Out-Null
+                Write-Host "Installing required packages..."
 
-            exit
+                break
+            }
+            elseif($answer.ToUpper() -ne "N"){
+                Write-Host "Invalid input answer should be `"y`" (yes) or `"N`" (no)..."
+            }
+            else{
+                Write-Host "Required packages were not installed, process is exiting."
+
+                exit
+            }
         }
-    }
+    }   
     else{
         Write-Host "Required packages are already installed, would you like to update them?"
         $answer = Read-Host "Chocolatey, git, and FFmpeg will be installed / updated [y=yes, n=no]"
         Write-Host ""
 
-        if($answer.ToUpper() = "Y"){
-            Set-Content -Path "$relevantPath\Setup\Step.txt" -Value "1" | Out-Null
-            Write-Host "Installing required packages..."
-        }
-        else{
-            Set-Content -Path "$relevantPath\Setup\Step.txt" -Value "3" | Out-Null
-            Write-Host "Skipping updates..."
+        while($true){
+            if($answer.ToUpper() -eq "Y"){
+                Set-Content -Path "$relevantPath\Setup\Step.txt" -Value "1" | Out-Null
+
+                Write-Host "Installing required packages..."
+
+                break
+            }
+            elseif($answer.ToUpper() -ne "N"){
+                Write-Host "Invalid input answer should be `"y`" (yes) or `"N`" (no)..."
+            }
+            else{
+                Set-Content -Path "$relevantPath\Setup\Step.txt" -Value "3" | Out-Null
+
+                Write-Host "Skipping updates..."
+
+                break
+            }
         }
     }
 }
