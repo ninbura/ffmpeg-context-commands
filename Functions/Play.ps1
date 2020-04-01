@@ -29,4 +29,5 @@ Write-Host "FFplay is starting...`n"
 PrintControls
 $argumentList = @("-i", "`"$filePath`"")
 runFFCommand $argumentList "ffplay"
+Write-Host ""
 EndProcess
