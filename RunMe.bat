@@ -22,7 +22,7 @@ PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\CheckRe
 set /p step=<"%relativePath%Setup\Step.txt"
 
 if %step% == 1 (
-    (echo 1) > "%relativePath%Setup\Step.txt"
+    (echo 2) > "%relativePath%Setup\Step.txt"
 
     PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\GetChocolatey.ps1"
 
@@ -32,7 +32,7 @@ if %step% == 1 (
 ) 
 
 if %step% == 2 (
-    (echo 2) > "%relativePath%Setup\Step.txt"
+    (echo 3) > "%relativePath%Setup\Step.txt"
 
     PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\GetRequiredPackages.ps1"
 
