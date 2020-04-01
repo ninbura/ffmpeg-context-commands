@@ -46,5 +46,5 @@ function EditRegistry($relevantPath){
 }
 
 Remove-Item -LiteralPath $relevantPath -Force -Recurse
-git clone https://github.com/TheNimble1/FFmpeg-Powershell-Scripts.git $relevantPath
+git clone https://github.com/TheNimble1/FFmpegPowershellScripts.git $relevantPath
 EditRegistry $relevantPath
