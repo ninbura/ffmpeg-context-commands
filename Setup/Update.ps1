@@ -2,22 +2,6 @@ param(
     [string]$relevantPath
 )
 
-
-function InstallAndUpdateGit($relevantPath){
-        $answer = Read-Host "Would you like to install / update git? This is required for automated updates... [y/n]"
-        Write-Host ""
-
-        if($answer.ToUpper() -eq "Y"){
-                choco install git
-
-                git clone https://github.com/TheNimble1/FFmpegPowershellScripts.git $relevantPath
-        }
-        elseif($answer.ToUpper() -NE "N"){
-                Write-Host "Invalid input, answer must be `"y`" (Yes) or `"n`" (No)...`n"
-        }
-}
-
-
 function EditRegistry($relevantPath){
         Write-Host "Creating contextual menu items...`n"
 
@@ -61,6 +45,6 @@ function EditRegistry($relevantPath){
         Write-Host "Context menu options have been generated..."
 }
 
-
-InstallAndUpdateGit $relevantPath
+Set-Location $relevantPath
+git clone https://github.com/TheNimble1/FFmpegPowershellScripts.git
 EditRegistry $relevantPath

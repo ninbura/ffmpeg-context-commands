@@ -14,12 +14,34 @@ if %errorLevel% == 0 (
     exit
 )
 
-set GetChocolateyPath=%~dp0Setup\GetChocolatey.ps1
-set UpdatePath=%~dp0Setup\Update.ps1
-set relevantPath=%~dp0
-set relevantPath=%relevantPath:~0,-1%
+set /p step=<"G:\My Drive\Programming\Powershell\FFmpeg\FFmpeg Powershell Scripts\Setup\Step.txt"
+set relativePath=%~dp0
+set relevantPath=%relativePath:~0,-1%
 
-PowerShell -NoProfile -ExecutionPolicy Bypass -File "%GetChocolateyPath%"
-PowerShell -NoProfile -ExecutionPolicy Bypass -File "%UpdatePath%" -relevantPath "%relevantPath%"
+if %step% == 0 (
+    (echo 1) > "%relativePath%Setup\Step.txt"
+
+    PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\GetChocolatey.ps1"
+
+    start "" "G:\My Drive\Programming\Powershell\FFmpeg\FFmpeg Powershell Scripts\RunMe.bat"
+
+    exit
+) 
+
+if %step% == 1 (
+    (echo 2) > "%relativePath%Setup\Step.txt"
+
+    PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\GetGit.ps1"
+
+    start "" "G:\My Drive\Programming\Powershell\FFmpeg\FFmpeg Powershell Scripts\RunMe.bat"
+
+    exit
+) 
+
+if %step% == 2 (
+    (echo 0) > "%relativePath%Setup\Step.txt"
+
+    PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\Update.ps1" -relevantPath "%relevantPath%"
+) 
 
 PAUSE
