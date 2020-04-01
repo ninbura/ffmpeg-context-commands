@@ -3,7 +3,7 @@ param(
 )
 
 function EditRegistry($relevantPath){
-        Write-Host "Creating contextual menu items...`n"
+        Write-Host "`nCreating contextual menu items..."
 
         $null = New-Item -Force "HKLM:\Software\Classes\*\shell\FFmpeg" |
                 New-ItemProperty -Name 'MUIVerb' -Value "FFmpeg"
@@ -45,6 +45,7 @@ function EditRegistry($relevantPath){
         Write-Host "Context menu options have been generated..."
 }
 
+Write-Host "Deleting old files..."
 Remove-Item -LiteralPath $relevantPath -Force -Recurse
 Start-Sleep 2
 git clone https://github.com/TheNimble1/FFmpegPowershellScripts.git $relevantPath
