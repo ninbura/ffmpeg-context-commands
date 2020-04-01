@@ -9,14 +9,14 @@ if($step -eq 0){
     $gitBool = $true
 
     try{
-        choco
+        choco | Out-Null
     }
     catch{
         $chocoBool = $false
     }
 
     try{
-        git
+        git | Out-Null
     }
     catch{
         $gitBool = $false
