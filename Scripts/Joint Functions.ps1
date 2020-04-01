@@ -695,14 +695,23 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
     return $videoProperties
 }
 
+
 function GetNewFilePath($tag, $filePath){
     $answer = Read-Host "Enter new file name, if left blank name with be autmoatically generate and tagged with `"_$tag`""
+    Write-host ""
 
-    if($null -eq $answer -or $answer -eq ""){
-        $newFilePath = "$($filePath.substring(0, $filePath.Length - 4))_$tag.mp4"
+    if($tag -eq "gif"){
+        $extension = "gif"
     }
     else{
-        $newFilepath = "$(Split-Path $filePath -Parent)\$answer.mp4"
+        $extension = "mp4"
+    }
+
+    if($null -eq $answer -or $answer -eq ""){
+        $newFilePath = "$($filePath.substring(0, $filePath.Length - 4))_$tag.$extension"
+    }
+    else{
+        $newFilepath = "$(Split-Path $filePath -Parent)\$answer.$extension"
     }
 
     return $newFilePath
