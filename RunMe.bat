@@ -14,16 +14,16 @@ if %errorLevel% == 0 (
     exit
 )
 
-set /p step=<"G:\My Drive\Programming\Powershell\FFmpeg\FFmpeg Powershell Scripts\Setup\Step.txt"
 set relativePath=%~dp0
 set relevantPath=%relativePath:~0,-1%
+set /p step=<"%relativePath%Setup\Step.txt"
 
 if %step% == 0 (
     (echo 1) > "%relativePath%Setup\Step.txt"
 
     PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\GetChocolatey.ps1"
 
-    start "" "G:\My Drive\Programming\Powershell\FFmpeg\FFmpeg Powershell Scripts\RunMe.bat"
+    start "" "%relativePath%RunMe.bat"
 
     exit
 ) 
@@ -33,7 +33,7 @@ if %step% == 1 (
 
     PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\GetGit.ps1"
 
-    start "" "G:\My Drive\Programming\Powershell\FFmpeg\FFmpeg Powershell Scripts\RunMe.bat"
+    start "" "%relativePath%RunMe.bat"
 
     exit
 ) 

@@ -45,7 +45,6 @@ function EditRegistry($relevantPath){
         Write-Host "Context menu options have been generated..."
 }
 
-Set-Location $relevantPath
-Set-Location ..
-git clone https://github.com/TheNimble1/FFmpegPowershellScripts.git
+Remove-Item -LiteralPath $relevantPath -Force -Recurse
+git clone https://github.com/TheNimble1/FFmpeg-Powershell-Scripts.git $relevantPath
 EditRegistry $relevantPath
