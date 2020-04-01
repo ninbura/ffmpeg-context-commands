@@ -14,17 +14,12 @@ if %errorLevel% == 0 (
     exit
 )
 
-echo Creating contextual menu items...
-
-set ccPath=%~dp0Scripts\CreateContext.ps1
+set GetChocolateyPath=%~dp0Setup\GetChocolatey.ps1
+set UpdatePath=%~dp0Setup\Update.ps1
 set relevantPath=%~dp0
 set relevantPath=%relevantPath:~0,-1%
 
-PowerShell -NoProfile -ExecutionPolicy Bypass -File "%ccPath%" -relevantPath "%relevantPath%"
+PowerShell -NoProfile -ExecutionPolicy Bypass -File "%GetChocolateyPath%"
+PowerShell -NoProfile -ExecutionPolicy Bypass -File "%UpdatePath%" -relevantPath "%relevantPath%"
 
-echo Compress created.
-echo GameOnly Created.
-echo Gif Created.
-echo.
-echo Creation complete.
 PAUSE
