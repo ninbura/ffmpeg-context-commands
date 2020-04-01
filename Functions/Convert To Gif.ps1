@@ -3,7 +3,7 @@ param (
 )
 
 
-Import-Module -Name "$PSScriptRoot\JointFunctions.ps1"
+Import-Module -Name "$(Split-Path $PSScriptRoot -Parent)\Scripts\Joint Functions.ps1"
 
 
 function SetPresetValues($originalVideoProperties){
@@ -120,12 +120,12 @@ $originalVideoProperties = [ordered]@{
 $originalVideoProperties = GetOriginalVideoProperties $filePath $originalVideoProperties
 $presetVideoProperties = SetPresetValues $originalVideoProperties
 $videoProperties = GetVideoProperties $originalVideoProperties $presetVideoProperties
-$newFilePath = "$($filePath.substring(0, $filePath.Length - 4)).gif"
+$newFilePath = GetNewFilePath "Gif" $filePath
 $fileModificationDate = GetModificationDate $newFilePath
 DeleteExistingFiles $newFilePath
 $argumentLists = CreateArgumentLists $filePath $newFilePath $videoProperties $originalVideoProperties
 Write-Host "Gif is building..."
-foreach($argumentList IN $argumentLists){runFFmpegCommand $argumentList}
+foreach($argumentList IN $argumentLists){runFFCommand $argumentList "ffmpeg"}
 DeleteTempFiles $argumentLists
 TestNewFilePath $newFilePath $fileModificationDate
 EndProcess

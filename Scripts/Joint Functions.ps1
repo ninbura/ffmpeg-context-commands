@@ -695,6 +695,18 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
     return $videoProperties
 }
 
+function GetNewFilePath($tag, $filePath){
+    $answer = Read-Host "Enter new file name, if left blank name with be autmoatically generate and tagged with `"_$tag`""
+
+    if($null -eq $answer -or $answer -eq ""){
+        $newFilePath = "$($filePath.substring(0, $filePath.Length - 4))_$tag.mp4"
+    }
+    else{
+        $newFilepath = "$(Split-Path $filePath -Parent)\$answer.mp4"
+    }
+
+    return $newFilePath
+}
 
 function GetModificationDate($newFilePath){
     
@@ -736,8 +748,8 @@ function DeleteExistingFiles($newFilePath){
 }
 
 
-function runFFmpegCommand($argumentList){
-    Start-Process -FilePath "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin\ffmpeg.exe" -Wait -NoNewWindow -ArgumentList $argumentList
+function runFFCommand($argumentList, $program){
+    Start-Process -FilePath "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin\$program.exe" -Wait -NoNewWindow -ArgumentList $argumentList
 }
 
 

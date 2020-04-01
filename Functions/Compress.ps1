@@ -3,7 +3,7 @@ param (
 )
 
 
-Import-Module -Name "$PSScriptRoot\JointFunctions.ps1"
+Import-Module -Name "$(Split-Path $PSScriptRoot -Parent)\Scripts\Joint Functions.ps1"
 
 
 function CreateArgumentList($filePath, $newFilePath, $videoProperties){
@@ -102,11 +102,11 @@ $originalVideoProperties = [ordered]@{
 }
 $originalVideoProperties = GetOriginalVideoProperties $filePath $originalVideoProperties
 $videoProperties = GetVideoProperties $originalVideoProperties
-$newFilePath = "$($filePath.substring(0, $filePath.Length - 4))_Compressed.mp4"
+$newFilePath = GetNewFilePath "Compressed" $filePath
 $fileModificationDate = GetModificationDate $newFilePath
 DeleteExistingFiles $newFilePath
 $argumentList = CreateArgumentList $filePath $newFilePath $videoProperties
 Write-Host "Video is building..."
-runFFmpegCommand $argumentList
+runFFCommand $argumentList "ffmpeg"
 TestNewFilePath $newFilePath $fileModificationDate
 EndProcess

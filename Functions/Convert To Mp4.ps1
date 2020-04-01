@@ -2,10 +2,7 @@ param (
     [string]$filePath
 )
 
-
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName Microsoft.VisualBasic
-Import-Module -Name "$PSScriptRoot\JointFunctions.ps1"
+Import-Module -Name "$(Split-Path $PSScriptRoot -Parent)\Scripts\Joint Functions.ps1"
 
 function GetUserConfirmation{
     while($true){
@@ -28,11 +25,11 @@ function GetUserConfirmation{
 
 Startup
 $userConfirmation = GetUserConfirmation $filePath
-$newFilePath = "$($filePath.substring(0, $filePath.Length - 4))_Converted.mp4"
+$newFilePath = GetNewFilePath "Converted" $filePath
 $fileModificationDate = GetModificationDate $newFilePath
 DeleteExistingFiles $newFilePath
 $argumentList = @("-loglevel", "error", "-stats", "-i", "`"$filePath`"", "-map", "0", "-c", "copy", "`"$newFilePath`"")
 Write-Host "Video is Building..."
-runFFmpegCommand $argumentList
+runFFCommand $argumentList "ffmpeg"
 TestNewFilePath $newFilePath $fileModificationDate
 EndProcess
