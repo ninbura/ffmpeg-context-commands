@@ -23,7 +23,7 @@ function EditRegistry($relevantPath){
         $null = New-Item -Force "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\Compress\command" | 
                 New-ItemProperty -Name '(Default)' -Value ((
                         "$PSHOME\powershell.exe -WindowStyle Maximized -ExecutionPolicy Bypass -NoProfile",
-                        "-File `"$relevantPath\Scripts\Compress.ps1`" -relevantPath `"$relevantPath`" -filePath `"%1`""
+                        "-File `"$relevantPath\Scripts\Compress.ps1`" -filePath `"%1`""
                 ) -Join ' ')
 
         $null = New-Item -Force "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\ConvertToMp4" |
@@ -31,7 +31,7 @@ function EditRegistry($relevantPath){
         $null = New-Item -Force "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\ConvertToMp4\command" | 
                 New-ItemProperty -Name '(Default)' -Value ((
                         "$PSHOME\powershell.exe -WindowStyle Maximized -ExecutionPolicy Bypass -NoProfile",
-                        "-File `"$relevantPath\Scripts\ConvertToMp4.ps1`" -relevantPath `"$relevantPath`" -filePath `"%1`""
+                        "-File `"$relevantPath\Scripts\ConvertToMp4.ps1`" -filePath `"%1`""
                 ) -Join ' ')
 
         $null = New-Item -Force "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\ConvertToGif" |
@@ -39,7 +39,7 @@ function EditRegistry($relevantPath){
         $null = New-Item -Force "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\ConvertToGif\command" | 
                 New-ItemProperty -Name '(Default)' -Value ((
                         "$PSHOME\powershell.exe -WindowStyle Maximized -ExecutionPolicy Bypass -NoProfile",
-                        "-File `"$relevantPath\Scripts\ConvertToGif.ps1`" -relevantPath `"$relevantPath`" -filePath `"%1`""
+                        "-File `"$relevantPath\Scripts\ConvertToGif.ps1`" -filePath `"%1`""
                 ) -Join ' ')
         
         Write-Host "Context menu options have been generated..."

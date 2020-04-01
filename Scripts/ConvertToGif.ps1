@@ -1,5 +1,4 @@
 param (
-    [string]$relevantPath,
     [string]$filePath
 )
 
@@ -118,7 +117,7 @@ $originalVideoProperties = [ordered]@{
     End_Time = 'Yes';
     Total_Clip_Duration = 'Yes'
 }
-$originalVideoProperties = GetOriginalVideoProperties $relevantPath $filePath $originalVideoProperties
+$originalVideoProperties = GetOriginalVideoProperties $filePath $originalVideoProperties
 $presetVideoProperties = SetPresetValues $originalVideoProperties
 $videoProperties = GetVideoProperties $originalVideoProperties $presetVideoProperties
 $newFilePath = "$($filePath.substring(0, $filePath.Length - 4)).gif"
@@ -126,7 +125,7 @@ $fileModificationDate = GetModificationDate $newFilePath
 DeleteExistingFiles $newFilePath
 $argumentLists = CreateArgumentLists $filePath $newFilePath $videoProperties $originalVideoProperties
 Write-Host "Gif is building..."
-foreach($argumentList IN $argumentLists){runFFmpegCommand $relevantPath $argumentList}
+foreach($argumentList IN $argumentLists){runFFmpegCommand $argumentList}
 DeleteTempFiles $argumentLists
 TestNewFilePath $newFilePath $fileModificationDate
 EndProcess

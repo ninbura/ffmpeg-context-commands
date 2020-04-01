@@ -1,5 +1,4 @@
 param (
-    [string]$relevantPath,
     [string]$filePath
 )
 
@@ -34,6 +33,6 @@ $fileModificationDate = GetModificationDate $newFilePath
 DeleteExistingFiles $newFilePath
 $argumentList = @("-loglevel", "error", "-stats", "-i", "`"$filePath`"", "-map", "0", "-c", "copy", "`"$newFilePath`"")
 Write-Host "Video is Building..."
-runFFmpegCommand $relevantPath $argumentList
+runFFmpegCommand $argumentList
 TestNewFilePath $newFilePath $fileModificationDate
 EndProcess

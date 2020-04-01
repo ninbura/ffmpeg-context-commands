@@ -61,7 +61,7 @@ function ConvertTimeStamp($timeStamp){
 }
 
 
-function GetOriginalVideoProperties($relevantPath, $filePath, $originalVideoProperties){
+function GetOriginalVideoProperties($filePath, $originalVideoProperties){
     [array]$optionArray = @()
     
     Switch($originalVideoProperties){
@@ -81,7 +81,7 @@ function GetOriginalVideoProperties($relevantPath, $filePath, $originalVideoProp
     }
 
     $ffpinfo = New-Object System.Diagnostics.ProcessStartInfo
-    $ffpinfo.FileName = "$relevantPath\FFmpeg\bin\ffprobe.exe"
+    $ffpinfo.FileName = "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin\ffprobe.exe"
     $ffpinfo.RedirectStandardError = $true
     $ffpinfo.RedirectStandardOutput = $true
     $ffpinfo.UseShellExecute = $false
@@ -736,8 +736,8 @@ function DeleteExistingFiles($newFilePath){
 }
 
 
-function runFFmpegCommand($relevantPath, $argumentList){
-    Start-Process -FilePath "$relevantPath\FFmpeg\bin\ffmpeg.exe" -Wait -NoNewWindow -ArgumentList $argumentList
+function runFFmpegCommand($argumentList){
+    Start-Process -FilePath "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin\ffmpeg.exe" -Wait -NoNewWindow -ArgumentList $argumentList
 }
 
 

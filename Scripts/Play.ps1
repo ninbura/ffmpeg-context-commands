@@ -1,5 +1,4 @@
 param (
-    [string]$relevantPath,
     [string]$filePath
 )
 

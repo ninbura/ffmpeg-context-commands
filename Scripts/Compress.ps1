@@ -1,5 +1,4 @@
 param (
-    [string]$relevantPath,
     [string]$filePath
 )
 
@@ -101,13 +100,13 @@ $originalVideoProperties = [ordered]@{
     End_Time = 'Yes';
     Total_Clip_Duration = 'Yes'
 }
-$originalVideoProperties = GetOriginalVideoProperties $relevantPath $filePath $originalVideoProperties
+$originalVideoProperties = GetOriginalVideoProperties $filePath $originalVideoProperties
 $videoProperties = GetVideoProperties $originalVideoProperties
 $newFilePath = "$($filePath.substring(0, $filePath.Length - 4))_Compressed.mp4"
 $fileModificationDate = GetModificationDate $newFilePath
 DeleteExistingFiles $newFilePath
 $argumentList = CreateArgumentList $filePath $newFilePath $videoProperties
 Write-Host "Video is building..."
-runFFmpegCommand $relevantPath $argumentList
+runFFmpegCommand $argumentList
 TestNewFilePath $newFilePath $fileModificationDate
 EndProcess

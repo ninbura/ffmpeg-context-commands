@@ -18,7 +18,9 @@ set relativePath=%~dp0
 set relevantPath=%relativePath:~0,-1%
 set /p step=<"%relativePath%Setup\Step.txt"
 
-if %step% == 0 (
+PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\CheckChoco.ps1" -relevantPath "%relevantPath%"
+
+if %step% == 1 (
     (echo 1) > "%relativePath%Setup\Step.txt"
 
     PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\GetChocolatey.ps1"
@@ -28,17 +30,17 @@ if %step% == 0 (
     exit
 ) 
 
-if %step% == 1 (
+if %step% == 2 (
     (echo 2) > "%relativePath%Setup\Step.txt"
 
-    PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\GetGit.ps1"
+    PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\GetRequiredPackages.ps1"
 
     start "" "%relativePath%RunMe.bat"
 
     exit
 ) 
 
-if %step% == 2 (
+if %step% == 3 (
     (echo 0) > "%relativePath%Setup\Step.txt"
 
     PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\Update.ps1" -relevantPath "%relevantPath%"
