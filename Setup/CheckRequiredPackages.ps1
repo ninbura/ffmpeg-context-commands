@@ -1,8 +1,8 @@
 param(
-    [string]$relevantPath
+    [string]$relativePath
 )
 
-$step = Get-Content -Path "$relevantPath\Setup\Step.txt" -TotalCount 1
+$step = Get-Content -Path "$relativePath\Setup\Step.txt" -TotalCount 1
 
 if($step -eq 0){
     $chocoBool = $true
@@ -36,7 +36,7 @@ if($step -eq 0){
 
         while($true){
             if($answer.ToUpper() -eq "Y"){
-                Set-Content -Path "$relevantPath\Setup\Step.txt" -Value "1" | Out-Null
+                Set-Content -Path "$relativePath\Setup\Step.txt" -Value "1" | Out-Null
                 Write-Host "Installing required packages..."
 
                 break
@@ -58,7 +58,7 @@ if($step -eq 0){
 
         while($true){
             if($answer.ToUpper() -eq "Y"){
-                Set-Content -Path "$relevantPath\Setup\Step.txt" -Value "1" | Out-Null
+                Set-Content -Path "$relativePath\Setup\Step.txt" -Value "1" | Out-Null
 
                 Write-Host "Installing required packages..."
 
@@ -68,7 +68,7 @@ if($step -eq 0){
                 Write-Host "Invalid input answer should be `"y`" (yes) or `"N`" (no)..."
             }
             else{
-                Set-Content -Path "$relevantPath\Setup\Step.txt" -Value "3" | Out-Null
+                Set-Content -Path "$relativePath\Setup\Step.txt" -Value "3" | Out-Null
 
                 Write-Host "Skipping updates..."
 

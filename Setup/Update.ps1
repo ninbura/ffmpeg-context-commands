@@ -1,8 +1,8 @@
 param(
-    [string]$relevantPath
+    [string]$relativePath
 )
 
-function EditRegistry($relevantPath){
+function EditRegistry($relativePath){
         Write-Host "`nCreating contextual menu items..."
 
         $null = New-Item -Force "HKLM:\Software\Classes\*\shell\FFmpeg" |
@@ -10,7 +10,7 @@ function EditRegistry($relevantPath){
         [microsoft.win32.registry]::SetValue(
                 "HKEY_LOCAL_MACHINE\Software\Classes\*\shell\FFmpeg",
                 "Icon",
-                "$relevantPath\Other Assets\FFmpeg.ico"
+                "$relativePath\Other Assets\FFmpeg.ico"
         )
         [microsoft.win32.registry]::SetValue(
                 "HKEY_LOCAL_MACHINE\Software\Classes\*\shell\FFmpeg",
@@ -23,7 +23,7 @@ function EditRegistry($relevantPath){
         $null = New-Item -Force "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\Compress\command" | 
                 New-ItemProperty -Name '(Default)' -Value ((
                         "$PSHOME\powershell.exe -WindowStyle Maximized -ExecutionPolicy Bypass -NoProfile",
-                        "-File `"$relevantPath\Scripts\Compress.ps1`" -filePath `"%1`""
+                        "-File `"$relativePath\Scripts\Compress.ps1`" -filePath `"%1`""
                 ) -Join ' ')
 
         $null = New-Item -Force "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\ConvertToMp4" |
@@ -31,7 +31,7 @@ function EditRegistry($relevantPath){
         $null = New-Item -Force "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\ConvertToMp4\command" | 
                 New-ItemProperty -Name '(Default)' -Value ((
                         "$PSHOME\powershell.exe -WindowStyle Maximized -ExecutionPolicy Bypass -NoProfile",
-                        "-File `"$relevantPath\Scripts\ConvertToMp4.ps1`" -filePath `"%1`""
+                        "-File `"$relativePath\Scripts\ConvertToMp4.ps1`" -filePath `"%1`""
                 ) -Join ' ')
 
         $null = New-Item -Force "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\ConvertToGif" |
@@ -39,14 +39,14 @@ function EditRegistry($relevantPath){
         $null = New-Item -Force "HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\ConvertToGif\command" | 
                 New-ItemProperty -Name '(Default)' -Value ((
                         "$PSHOME\powershell.exe -WindowStyle Maximized -ExecutionPolicy Bypass -NoProfile",
-                        "-File `"$relevantPath\Scripts\ConvertToGif.ps1`" -filePath `"%1`""
+                        "-File `"$relativePath\Scripts\ConvertToGif.ps1`" -filePath `"%1`""
                 ) -Join ' ')
         
         Write-Host "Context menu options have been generated..."
 }
 
 Write-Host "Deleting old files..."
-Remove-Item -LiteralPath $relevantPath -Force -Recurse
+Remove-Item -LiteralPath $relativePath -Force -Recurse
 Start-Sleep 2
-git clone https://github.com/TheNimble1/FFmpegPowershellScripts.git $relevantPath
-EditRegistry $relevantPath
+git clone https://github.com/TheNimble1/FFmpegPowershellScripts.git $relativePath
+EditRegistry $relativePath

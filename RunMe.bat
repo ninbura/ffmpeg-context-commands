@@ -15,36 +15,36 @@ if %errorLevel% == 0 (
 )
 
 set relativePath=%~dp0
-set relevantPath=%relativePath:~0,-1%
+set relativePath=%relativePath:~0,-1%
 
-PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\CheckRequiredPackages.ps1" -relevantPath "%relevantPath%"
+PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%\Setup\CheckRequiredPackages.ps1" -relativePath "%relativePath%"
 
-set /p step=<"%relativePath%Setup\Step.txt"
+set /p step=<"%relativePath%\Setup\Step.txt"
 
 if %step% == 1 (
-    (echo 2) > "%relativePath%Setup\Step.txt"
+    (echo 2) > "%relativePath%\Setup\Step.txt"
 
-    PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\GetChocolatey.ps1"
+    PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%\Setup\GetChocolatey.ps1"
 
-    start "" "%relativePath%RunMe.bat"
+    start "" "%relativePath%\RunMe.bat"
 
     exit
 ) 
 
 if %step% == 2 (
-    (echo 3) > "%relativePath%Setup\Step.txt"
+    (echo 3) > "%relativePath%\Setup\Step.txt"
 
-    PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\GetRequiredPackages.ps1"
+    PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%\Setup\GetRequiredPackages.ps1"
 
-    start "" "%relativePath%RunMe.bat"
+    start "" "%relativePath%\RunMe.bat"
 
     exit
 ) 
 
 if %step% == 3 (
-    (echo 0) > "%relativePath%Setup\Step.txt"
+    (echo 0) > "%relativePath%\Setup\Step.txt"
 
-    PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Setup\Update.ps1" -relevantPath "%relevantPath%"
+    PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%\Setup\Update.ps1" -relativePath "%relativePath%"
 ) 
 
 PAUSE
