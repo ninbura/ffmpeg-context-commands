@@ -7,6 +7,7 @@ $step = Get-Content -Path "$relevantPath\Setup\Step.txt" -TotalCount 1
 if($step -eq 0){
     $chocoBool = $true
     $gitBool = $true
+    $ffmpegBool = $true
 
     try{
         choco | Out-Null
