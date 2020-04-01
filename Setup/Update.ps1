@@ -46,5 +46,6 @@ function EditRegistry($relevantPath){
 }
 
 Set-Location $relevantPath
+Set-Location ..
 git clone https://github.com/TheNimble1/FFmpegPowershellScripts.git
 EditRegistry $relevantPath

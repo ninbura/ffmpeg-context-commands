@@ -45,3 +45,4 @@ if %step% == 2 (
 ) 
 
 PAUSE
+Exit
