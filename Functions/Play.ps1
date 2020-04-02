@@ -27,7 +27,5 @@ function PrintControls(){
 
 Write-Host "FFplay is starting...`n"
 PrintControls
-$argumentList = @("-i", "`"$filePath`"")
+$argumentList = @("-hide_banner", "-stats", "-i", "-x", "848", "-y", "480", "`"$filePath`"")
 runFFCommand $argumentList "ffplay"
-Write-Host ""
-EndProcess
