@@ -96,7 +96,7 @@ function cloneGit($cloneBool, $relativePath){
         Start-Sleep 2
 
         Write-Host "`nUpdating Files..."
-        git clone https://github.com/TheNimble1/FFmpegPowershellScripts.git $relativePath
+        git clone https://github.com/TheNimble1/FFmpegContextCommands.git $relativePath
     }
 }
 
