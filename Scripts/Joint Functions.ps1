@@ -480,22 +480,30 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
             }
         }
         elseif(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Pixel_Width"){
-            if($null -eq $videoProperties.Pixel_Height -and $null -eq $videoProperties.Pad){
+            if($videoProperties.Pixel_Height -match "^$|^Auto$" -and $null -eq $videoProperties.Pad){
                 Write-Host "Pixel Height will automatically scale based on Pixel width and aspect ratio if Pixel Height has not been changed from its original value." -ForegroundColor Yellow
+                Write-Host "Auto can be set manually on pixel width or pixel height if needed by entering `"Auto`" (case insensitive)." -ForegroundColor Yellow
                 Write-Host "Setting pixel width or height to its original value manually will count as changing its original value.`n" -ForegroundColor Yellow
             }
-            elseif($null -eq $videoProperties.Pad -and ($null -eq $videoProperties.Pixel_Width -or $null -eq $videoProperties.Pixel_Height)){
+            elseif($null -eq $videoProperties.Pad -and ($videoProperties.Pixel_Width -match "^$|^Auto$" -or $videoProperties.Pixel_Height -match "^$|^Auto$")){
+                Write-Host "Auto can be set manually on pixel width or pixel height if needed by entering `"Auto`" (case insensitive)." -ForegroundColor Yellow
                 Write-Host "Warning:" -BackgroundColor DarkRed -NoNewline
                 Write-Host " If both pixel width and pixel height are changed and Pad is not enabled output video could be distorted.`n" -ForegroundColor Yellow
+            }
+            else{
+                Write-Host "Auto can be set manually on pixel width or pixel height if needed by entering `"Auto`" (case insensitive).`n" -ForegroundColor Yellow
             }
 
             while($true){
                 [string]$pixelWidth = Read-Host -Prompt "Input new pixel width (example: 1920), 'c' to cancel, or 'r' to revert to the original pixel width"
                 Write-Host ""
 
-                if($pixelWidth -match '^([0-9])*$' -and [int]$pixelWidth -ge 1){
+                if(($pixelWidth -eq "Auto") -or ($pixelWidth -match '^([0-9])*$' -and [int]$pixelWidth -ge 1)){
                     $videoProperties.Pixel_Width = $pixelWidth
 
+                    if($null -eq $videoProperties.Pixel_Height  -and $pixelWidth -ne "Auto"){
+                        $videoProperties.Pixel_Height = "Auto"
+                    }
 
                     PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
                     ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
@@ -516,7 +524,21 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                             $videoProperties.Pixel_Width = $presetVideoProperties.Pixel_Width
                         }
                         else{
-                            $videoProperties.Pixel_Width = $null
+                            if(!($videoProperties.Pixel_Height -match "^$|^Auto$")){
+                                $videoProperties.Pixel_Width = "Auto"
+                            }
+                            else{
+                                $videoProperties.Pixel_Width = $null
+                            }
+                        }
+
+                        if($videoProperties.Pixel_Height -eq "Auto"){
+                            if($null -ne $presetVideoProperties){
+                                $videoProperties.Pixel_Height = $presetVideoProperties.Pixel_Height
+                            }
+                            else{
+                                $videoProperties.Pixel_Height = $null
+                            }
                         }
                     }
                     
@@ -534,22 +556,30 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
             }
         }
         elseif(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Pixel_Height"){
-            if($null -eq $videoProperties.Pixel_Width -and $null -eq $videoProperties.Pad){
+            if($videoProperties.Pixel_Width -match "^$|^Auto$" -and $null -eq $videoProperties.Pad){
                 Write-Host "Pixel width will automatically scale based on Pixel Height and aspect ratio if Pixel Width has not been changed from its original value." -ForegroundColor Yellow
+                Write-Host "Auto can be set manually on pixel width or pixel height if needed by entering `"Auto`" (case insensitive)." -ForegroundColor Yellow
                 Write-Host "Setting pixel width or height to its original value manually will count as changing its original value.`n" -ForegroundColor Yellow
             }
-            elseif($null -eq $videoProperties.Pad -and ($null -eq $videoProperties.Pixel_Width -or $null -eq $videoProperties.Pixel_Height)){
+            elseif($null -eq $videoProperties.Pad -and ($videoProperties.Pixel_Width -match "^$|^Auto$" -or $videoProperties.Pixel_Height -match "^$|^Auto$")){
+                Write-Host "Auto can be set manually on pixel width or pixel height if needed by entering `"Auto`" (case insensitive)." -ForegroundColor Yellow
                 Write-Host "Warning:" -BackgroundColor DarkRed -NoNewline
                 Write-Host " If both pixel width and pixel height are changed and Pad is not enabled output video could be distorted.`n" -ForegroundColor Yellow
+            }
+            else{
+                Write-Host "Auto can be set manually on pixel width or pixel height if needed by entering `"Auto`" (case insensitive).`n" -ForegroundColor Yellow
             }
 
             while($true){
                 [string]$pixelHeight = Read-Host -Prompt "Input new pixel height (example: 1080), 'c' to cancel, or 'r' to revert to the original pixel height"
                 Write-Host ""
 
-                if($pixelHeight -match '^([0-9])*$' -and [int]$pixelHeight -ge 1){
+                if(($pixelHeight -eq "Auto") -or ($pixelHeight -match '^([0-9])*$' -and [int]$pixelHeight -ge 1)){
                     $videoProperties.Pixel_Height = $pixelHeight
 
+                    if($null -eq $videoProperties.Pixel_Width -and $pixelHeight -ne "Auto"){
+                        $videoProperties.Pixel_Width = "Auto"
+                    }
 
                     PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
                     ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
@@ -570,7 +600,21 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                             $videoProperties.Pixel_Height = $presetVideoProperties.Pixel_Height
                         }
                         else{
-                            $videoProperties.Pixel_Height = $null
+                            if(!($videoProperties.Pixel_Width -match "^$|^Auto$")){
+                                $videoProperties.Pixel_Height = "Auto"
+                            }
+                            else{
+                                $videoProperties.Pixel_Height = $null
+                            }
+                        }
+
+                        if($videoProperties.Pixel_Width -eq "Auto"){
+                            if($null -ne $presetVideoProperties){
+                                $videoProperties.Pixel_Width = $presetVideoProperties.Pixel_Width
+                            }
+                            else{
+                                $videoProperties.Pixel_Width = $null
+                            }
                         }
                     }
                     
@@ -590,10 +634,10 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
         elseif(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Pad"){
             Write-Host "When pad is enabled the original aspect ratio of the video will be preserved regardless of what you change pixel width and pixel height to." -ForegroundColor Yellow
 
-            if($null -eq $videoProperties.Pixel_Width -or $null -eq $videoProperties.Pixel_Height){
+            if($videoProperties.Pixel_Width -match "^$|^Auto$" -or $videoProperties.Pixel_Height -match "^$|^Auto$"){
                 Write-Host "Enabling Pad without changing both pixel width and pixel Height will have no effect on the output video.`n" -ForegroundColor Yellow
             }
-            elseif($null -ne $videoProperties.Pixel_Width -or $null -ne $videoProperties.Pixel_Height -and $null -ne $videoProperties.Pad){
+            elseif(!($videoProperties.Pixel_Width -match "^$|^Auto$") -and !($videoProperties.Pixel_Height -match "^$|^Auto$") -and $null -ne $videoProperties.Pad){
                 Write-Host "Warning:" -BackgroundColor DarkRed -NoNewline
                 Write-Host " Disabling pad when both pixel width and pixel height have been changed could result in distortion of the output video.`n" -ForegroundColor Yellow
             }
@@ -606,7 +650,12 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                 Write-Host ""
 
                 if($pad.ToUpper() -match "^(Y|N)$"){
-                    $videoProperties.Pad = $pad
+                    if($pad -eq $originalVideoProperties.Pad){
+                        $videoProperties.Pad = $null
+                    }
+                    else{
+                        $videoProperties.Pad = $pad
+                    }
 
                     PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
                     ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `

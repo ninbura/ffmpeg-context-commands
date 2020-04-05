@@ -15,26 +15,26 @@ function CreateArgumentList($filePath, $newFilePath, $videoProperties, $original
     if($null -ne $videoProperties.Pixel_Width -or $null -ne $videoProperties.Pixel_Height -or $null -ne $videoProperties.FPS){
         [array]$videoFilters = @()
 
-        if($null -ne $videoProperties.Pixel_Width -and $null -eq $videoProperties.Pixel_Height){
-            $videoFilters += "scale=$($videoProperties.Pixel_Width):-2:flags=lanczos"
-        }
-        elseif($null -eq $videoProperties.Pixel_Width -and $null -ne $videoProperties.Pixel_Height){
-            $videoFilters += "scale=-2:$($videoProperties.Pixel_Height):flags=lanczos"
-        }
-        elseif($null -ne $videoProperties.Pixel_Width -and $null -ne $videoProperties.Pixel_Height -and $null -eq $videoProperties.Pad){
-            $videoFilters += "scale=$($videoProperties.Pixel_Width):$($videoProperties.Pixel_Height):flags=lanczos"
-        }
-        elseif($null -ne $videoProperties.Pixel_Width -and $null -ne $videoProperties.Pixel_Height -and $null -ne $videoProperties.Pad){
-            if($originalVideoProperties.Pixel_Width / $originalVideoProperties.Pixel_Height -gt $videoProperties.Pixel_Width / $videoProperties.Pixel_Height){
-                $videoFilters += "scale=$($videoProperties.Pixel_Width):-2:flags=lanczos, pad=iw:$($videoProperties.Pixel_Height):0:$($videoProperties.Pixel_Height)-ih/2"
-            }
-            else{
-                $videoFilters += "scale=-2:$($videoProperties.Pixel_Height):flags=lanczos, pad=$($videoProperties.Pixel_Width):ih:$($videoProperties.Pixel_Width)-iw/2:0"
-            }
-        }
-
         if($null -ne $videoProperties.FPS){
             $videoFilters += "fps=$($videoProperties.FPS)"
+        }
+
+        if(!($videoProperties.Pixel_Width -match "^$|^Auto$") -and $videoProperties.Pixel_Height -eq "Auto"){
+            $videoFilters += "scale=$($videoProperties.Pixel_Width):-2:flags=lanczos, setsar=sar=1/1"
+        }
+        elseif($videoProperties.Pixel_Width -eq "Auto" -and !($videoProperties.Pixel_Height -match "^$|^Auto$")){
+            $videoFilters += "scale=-2:$($videoProperties.Pixel_Height):flags=lanczos, setsar=sar=1/1"
+        }
+        elseif(!($videoProperties.Pixel_Width -match "^$|^Auto$") -and !($videoProperties.Pixel_Height -match "^$|^Auto$") -and $null -eq $videoProperties.Pad){
+            $videoFilters += "scale=$($videoProperties.Pixel_Width):$($videoProperties.Pixel_Height):flags=lanczos, setsar=sar=1/1"
+        }
+        elseif(!($videoProperties.Pixel_Width -match "^$|^Auto$") -and !($videoProperties.Pixel_Height -match "^$|^Auto$") -and $null -ne $videoProperties.Pad){
+            if($originalVideoProperties.Pixel_Width / $originalVideoProperties.Pixel_Height -gt $videoProperties.Pixel_Width / $videoProperties.Pixel_Height){
+                $videoFilters += "scale=$($videoProperties.Pixel_Width):-2:flags=lanczos, pad=iw:$($videoProperties.Pixel_Height):0:$($videoProperties.Pixel_Height)-ih/2, setsar=sar=1/1"
+            }
+            else{
+                $videoFilters += "scale=-2:$($videoProperties.Pixel_Height):flags=lanczos, pad=$($videoProperties.Pixel_Width):ih:$($videoProperties.Pixel_Width)-iw/2:0, setsar=sar=1/1"
+            }
         }
 
         $videoFilterString = ""
@@ -43,7 +43,7 @@ function CreateArgumentList($filePath, $newFilePath, $videoProperties, $original
             if($videoFilters.Count -eq 1){
                 $videoFilterString = "`"$($videoFilters[$i])`""
             }
-            elseif($i = 0){
+            elseif($i -eq 0){
                 $videoFilterString += "`"$($videoFilters[$i]), "
             }
             elseif($i -eq $videoFilters.Count - 1){
@@ -55,6 +55,9 @@ function CreateArgumentList($filePath, $newFilePath, $videoProperties, $original
         }
 
         $videoFilters = @("-vf", "$videoFilterString")
+    }
+    else{
+        $videoFilters = $null
     }
 
     if($videoProperties.Contains("Audio_Track_Number")){
@@ -136,7 +139,7 @@ $originalVideoProperties = [ordered]@{
 }
 $originalVideoProperties = GetOriginalVideoProperties $filePath $originalVideoProperties
 $keepTweaking = ""
-:outer While($keepTweaking.ToUpper() -ne "N"){
+While($keepTweaking.ToUpper() -ne "N"){
     $videoProperties = GetVideoProperties $originalVideoProperties $videoProperties
     $newFilePath = GetNewFilePath "Compressed" $filePath
     $fileModificationDate = GetModificationDate $newFilePath
