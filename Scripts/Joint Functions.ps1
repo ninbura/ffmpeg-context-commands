@@ -433,8 +433,9 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
             }
         }
         elseif(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Compression_Level"){
-            Write-Host "Comrpession level can be set from 0-51, with 0 being the lowest level of compression but largest file size, and 51 being the highest level of compression with lowest file size."
-            Write-Host "However, it's worth noting that values below 15 can actually result in an output file larger than the original, " -NoNewline
+            Write-Host "Comrpession level can be set from 0-51, with 0 being the lowest level of compression but largest file size,"
+            Write-Host "and 51 being the highest level of compression with lowest file size."
+            Write-Host "However, it's worth noting that values below 15 can actually result in an output file larger than the original,"
             Write-Host "and that values from 15-18 are typically considered `"visually losses`" while still decreasing file size.`n"
 
             while($true){
@@ -959,7 +960,8 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                     Break
                 }
                 else{
-                    Write-Host "Invalid left crop, left crop must be a number and less than total pixel width, right crop must also be taken into account (Width > (Left + Right))...`n"
+                    Write-Host "Invalid left crop, left crop must be a number and less than total pixel width,"
+                    Write-Host "right crop must also be taken into account (Width > (Left + Right))...`n"
                 }
             }
         }
@@ -1066,7 +1068,8 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                     Break
                 }
                 else{
-                    Write-Host "Invalid right crop, right crop must be a number and less than total pixel width, left crop must also be taken into account (Width > (Left + Right))...`n"
+                    Write-Host "Invalid right crop, right crop must be a number and less than total pixel width,"
+                    Write-Host "left crop must also be taken into account (Width > (Left + Right))...`n"
                 }
             }
         }
@@ -1173,7 +1176,8 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                     Break
                 }
                 else{
-                    Write-Host "Invalid top crop, top crop must be a number and less than total pixel height, bottom crop must also be taken into account (Height > (Top + Bottom))...`n"
+                    Write-Host "Invalid top crop, top crop must be a number and less than total pixel height,"
+                    Write-Host "bottom crop must also be taken into account (Height > (Top + Bottom))...`n"
                 }
             }
         }
@@ -1280,7 +1284,8 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                     Break
                 }
                 else{
-                    Write-Host "Invalid bottom crop, bottom crop must be a number and less than total pixel height, top crop must also be taken into account (Height > (Top + Bottom))...`n"
+                    Write-Host "Invalid bottom crop, bottom crop must be a number and less than total pixel height,"
+                    Write-Host "top crop must also be taken into account (Height > (Top + Bottom))...`n"
                 }
             }
         }

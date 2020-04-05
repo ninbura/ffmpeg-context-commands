@@ -24,10 +24,11 @@ function GetUserConfirmation{
 }
 
 Startup
+Write-Host "The purpose of this program is to convert video files into mp4 video files.`n" -ForegroundColor Cyan
 $userConfirmation = GetUserConfirmation $filePath
 $newFilePath = GetNewFilePath "Converted" $filePath
 $fileModificationDate = GetModificationDate $newFilePath
-DeleteExistingFiles $newFilePath
+$newFilePath = DeleteExistingFiles "Converted" $newFilePath
 $argumentList = @("-loglevel", "error", "-stats", "-i", "`"$filePath`"", "-map", "0", "-c", "copy", "`"$newFilePath`"")
 Write-Host "Video is Building..."
 runFFCommand $argumentList "ffmpeg"
