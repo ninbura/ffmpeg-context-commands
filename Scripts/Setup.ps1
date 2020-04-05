@@ -6,3 +6,4 @@ $relativePath = $(Split-Path $PSScriptRoot -Parent)
 cloneGit $boolArray[1] $relativePath
 Start-Sleep 2
 EditRegistry $boolArray[1] $relativePath
+Remove-Item -LiteralPath "$relativePath\.git" -Force -Recurse
