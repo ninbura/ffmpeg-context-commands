@@ -119,13 +119,17 @@ $originalVideoProperties = [ordered]@{
 }
 $originalVideoProperties = GetOriginalVideoProperties $filePath $originalVideoProperties
 $presetVideoProperties = SetPresetValues $originalVideoProperties
-$videoProperties = GetVideoProperties $originalVideoProperties $presetVideoProperties
-$newFilePath = GetNewFilePath "Gif" $filePath
-$fileModificationDate = GetModificationDate $newFilePath
-DeleteExistingFiles $newFilePath
-$argumentLists = CreateArgumentLists $filePath $newFilePath $videoProperties $originalVideoProperties
-Write-Host "Gif is building..."
-foreach($argumentList IN $argumentLists){runFFCommand $argumentList "ffmpeg"}
-DeleteTempFiles $argumentLists
-TestNewFilePath $newFilePath $fileModificationDate
+$keepTweaking = ""
+:outer While($keepTweaking.ToUpper() -ne "N"){
+    $videoProperties = GetVideoProperties $originalVideoProperties $videoProperties $presetVideoProperties
+    $newFilePath = GetNewFilePath "Gif" $filePath
+    $fileModificationDate = GetModificationDate $newFilePath
+    $newFilePath = DeleteExistingFiles "Gif" $newFilePath
+    $argumentLists = CreateArgumentLists $filePath $newFilePath $videoProperties $originalVideoProperties
+    Write-Host "Gif is building..."
+    foreach($argumentList IN $argumentLists){runFFCommand $argumentList "ffmpeg"}
+    DeleteTempFiles $argumentLists
+    TestNewFilePath $newFilePath $fileModificationDate
+    $keepTweaking = KeepTweaking
+}
 EndProcess

@@ -25,16 +25,15 @@ function checkFileType($filePath){
 
 function InformUser(){
     Write-Host "File deletion in this program does not completely remove the file from your system, it is moved to the recycle bin and can be recovered." -ForegroundColor Yellow
-    Write-Host "UNLESS " -NoNewLine -ForegroundColor Red
-    Write-Host "you are agreeing to deletion of a file on a network drive in-which they will be permanently deleted upon affirmative response." -ForegroundColor Yellow
+    Write-Host "UNLESS" -NoNewLine -BackgroundColor DarkRed
+    Write-Host " you are agreeing to deletion of a file on a network drive in-which they will be permanently deleted upon affirmative response." -ForegroundColor Yellow
     Write-Host "This program is not compatible with all file types, such as Matroska (.mkv), as it does not have the necessary header information." -ForegroundColor Yellow
     Write-Host "It is possible that there are other file types incompatible with this program that can be excluded from operation in the future.`n" -ForegroundColor Yellow
 }
 
 
 function Quit(){
-    write-host('Closing program...') -ForegroundColor Red
-    Write-Host "Process complete, press [Enter] to exit..." -NoNewLine
+    write-host('Closing program, press [Enter] to exit...') -NoNewLine
     $Host.UI.ReadLine()
 
     exit
@@ -65,7 +64,8 @@ function GetOriginalVideoProperties($filePath, $originalVideoProperties){
     [array]$optionArray = @()
     
     Switch($originalVideoProperties){
-        {$_.Pixel_Height -eq 'Yes'} {$optionArray += 'height';}
+        {$_.Pixel_Width -eq 'Yes' -or $_.Resolution -eq 'Yes'} {$optionArray += 'width';}
+        {$_.Pixel_Height -eq 'Yes' -or $_.Resolution -eq 'Yes'} {$optionArray += 'height';}
         {$_.FPS -eq 'Yes'} {$optionArray += 'r_frame_rate';}
         {$_.Total_Clip_Duration -eq 'Yes'} {$optionArray += 'duration';}
         {$_.Audio_Track_Number -eq 'Yes'} {$optionArray += 'codec_type';}
@@ -99,13 +99,34 @@ function GetOriginalVideoProperties($filePath, $originalVideoProperties){
         Quit
     }
 
-    [array]$videoPropertyArray = $ffpStdOut `
-        | select-string -Pattern "(height=)|(r_frame_rate=)|(duration=)" `
-        | ForEach-Object {$_.ToString().Split(" ")}
+    $noPropertyFlag = 0
 
-    [array]$AudioTrackArray = $ffpStdOut `
-        | select-string -Pattern "(codec_type=audio)" `
-        | ForEach-Object {$_.ToString().Split(" ")}
+    foreach($property in $ffpStdOut){
+        if($property -eq "[/PROGRAM]"){
+            $noPropertyFlag = 1
+        }
+    }
+
+    $videoPropertyArray = @()
+    $programFlag = 0
+
+    foreach($property in $ffpStdOut){
+        if($property -eq "[/PROGRAM]"){
+            $programFlag = 1
+        }
+        
+        if(
+            $noPropertyFlag -eq 0 -or
+            ($programFlag -gt 0 -and $property -match "width=|height=|r_frame_rate=|duration=|codec_type=")
+        ){
+            $videoPropertyArray += $property
+        }
+    }
+
+    [string]$pixelWidth = $videoPropertyArray | select-string -Pattern "width=" | select-object -First 1
+    [string]$pixelHeight = $videoPropertyArray | select-string -Pattern "height=" | select-object -First 1
+    [string]$fps = $videoPropertyArray | select-string -Pattern "r_frame_rate=" | select-object -First 1
+    [string]$duration = $videoPropertyArray | select-string -Pattern "duration=" | select-object -First 1
 
     if($videoPropertyArray.Count -eq 0){
         Write-Host "Invalid file, must contain conventional video stream... `n" -ForegroundColor Red
@@ -113,21 +134,43 @@ function GetOriginalVideoProperties($filePath, $originalVideoProperties){
         Quit
     }
 
-    $originalVideoProperties.Pixel_Height = $videoPropertyArray[0].Substring($videoPropertyArray[0].IndexOf("=") + 1)
-    $originalVideoProperties.FPS = $videoPropertyArray[1].Substring($videoPropertyArray[1].IndexOf("=") + 1, $videoPropertyArray[1].Length - $videoPropertyArray[1].IndexOf("/"))
-    $originalVideoProperties.Total_Clip_Duration = [double]$videoPropertyArray[2].Substring($videoPropertyArray[2].IndexOf("=")+ 1)
+    if($originalVideoProperties.Resolution -eq 'Yes' -and $null -ne $pixelWidth -and $null -ne $pixelHeight){
+        $originalVideoProperties.Resolution = "$($pixelWidth.Substring($pixelWidth.IndexOf("=") + 1))x$($pixelHeight.Substring($pixelHeight.IndexOf("=") + 1))"
+    }
+
+    if($originalVideoProperties.Pixel_Width -eq 'Yes' -and $null -ne $pixelWidth){
+        $originalVideoProperties.Pixel_Width = $pixelWidth.Substring($pixelWidth.IndexOf("=") + 1)
+    }
     
+    if($originalVideoProperties.Pixel_Height -eq 'Yes' -and $null -ne $pixelHeight){
+        $originalVideoProperties.Pixel_Height = $pixelHeight.Substring($pixelHeight.IndexOf("=") + 1)
+    }
+    
+    if($null -ne $fps){
+        $originalVideoProperties.FPS = [regex]::match($fps,"(?<=\=).*(?=\/)").Value
+    }
+    
+    if($null -ne $duration){
+        $originalVideoProperties.Total_Clip_Duration = [double]$duration.Substring($duration.IndexOf("=")+ 1)
+    }
+
+    if($originalVideoProperties.End_Time -eq 'Yes' -and $null -ne $duration){
+        $originalVideoProperties.End_Time = ConvertDuration $originalVideoProperties.Total_Clip_Duration
+    }
+
+    [array]$AudioTrackArray = $videoPropertyArray `
+        | select-string -Pattern "(codec_type=audio)" `
+        | ForEach-Object {$_.ToString().Split(" ")}
+
     if($AudioTrackArray.Count -gt 0){
         $originalVideoProperties.Audio_Track_Number = "1/$($AudioTrackArray.Count)"
     }
-    else{
+    elseif($AudioTrackArray.Count -eq 0 -and $originalVideoProperties.Audio_Track_Number -eq 'Yes'){
         $originalVideoProperties.Remove("Audio_Track_Number")
         $originalVideoProperties.Remove("Audio_Level")
 
         write-host "There are no audio tracks in this file, audio modification has been disabled.`n" -ForegroundColor Yellow
     }
-
-    $originalVideoProperties.End_Time = ConvertDuration $originalVideoProperties.Total_Clip_Duration
 
     return $originalVideoProperties
 }
@@ -144,7 +187,14 @@ function PrintProperties($originalVideoProperties, $videoProperties, $type, $col
             }
             else{
                 Write-Host "[$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -replace '_',' ') = " -NoNewline -ForegroundColor $colors[$i]
-                Write-Host "$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).value)]/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
+                Write-Host "$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).value)]" -NoNewline -ForegroundColor $colors[$i]
+                
+                if($i -eq $originalVideoProperties.Count -1){
+                    Write-Host ""
+                }
+                else{
+                    Write-Host "/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
+                }
             }            
         }
     }
@@ -165,10 +215,24 @@ function PrintProperties($originalVideoProperties, $videoProperties, $type, $col
                 Write-Host "[$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -replace '_',' ') = " -NoNewline -ForegroundColor $colors[$i]
 
                 if($null -eq ($videoProperties.GetEnumerator() | select-object -Index $i).value){
-                    Write-Host "$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).value)]/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
+                    Write-Host "$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).value)]" -NoNewline -ForegroundColor $colors[$i]
+                    
+                    if($i -eq $originalVideoProperties.Count -1){
+                        Write-Host ""
+                    }
+                    else{
+                        Write-Host "/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
+                    }
                 }
                 else{
-                    Write-Host "$(($videoProperties.GetEnumerator() | select-object -Index $i).value)]/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
+                    Write-Host "$(($videoProperties.GetEnumerator() | select-object -Index $i).value)]" -NoNewline -ForegroundColor $colors[$i]
+                    
+                    if($i -eq $originalVideoProperties.Count -1){
+                        Write-Host ""
+                    }
+                    else{
+                        Write-Host "/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
+                    }
                 }
             }            
         }
@@ -176,7 +240,12 @@ function PrintProperties($originalVideoProperties, $videoProperties, $type, $col
     elseif($type -eq 'Change'){
         Write-Host "$($videoProperties.Name -replace '_',' ') " -NoNewline -ForegroundColor $colors
         write-host "changed to " -NoNewline
-        Write-Host "$($videoProperties.value)" -NoNewline -ForegroundColor $colors
+        if($null -eq $videoProperties.Value){
+            Write-Host "$($originalVideoProperties.value)" -NoNewline -ForegroundColor $colors
+        }
+        else{
+            Write-Host "$($videoProperties.value)" -NoNewline -ForegroundColor $colors
+        }
         Write-Host ".`n"
     }
     elseif($type -eq 'Cancel'){
@@ -205,6 +274,14 @@ function PrintProperties($originalVideoProperties, $videoProperties, $type, $col
         }
 
         Write-Host "...`n"
+    }
+    elseif($type -eq 'Test'){
+        for($i = 0; $i -lt $originalVideoProperties.Count; $i++){
+            Write-Host "$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -replace '_',' ') = " -NoNewline
+            Write-Host "$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).value)"
+        }
+
+        Write-Host ""
     }
     else{
         Write-Host 'Final settings:'
@@ -268,27 +345,30 @@ function FormatTimeStamp($timeStamp){
 }
 
 
-function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
-    $colorArray = @('Magenta', 'Yellow', 'Cyan', 'DarkCyan', 'DarkGray', 'Green', 'Blue', 'White', 'Red')
-    $videoProperties = [ordered]@{}
+function GetVideoProperties($originalVideoProperties, $videoProperties, $presetVideoProperties){
+    $colorArray = @('Magenta', 'DarkGray', 'Yellow', 'White', 'Cyan', 'DarkCyan', 'Green', 'DarkGreen', 'Blue', 'Gray')
     
-    if($null -eq $presetVideoProperties){
-        for($i = 0; $i -lt $originalVideoProperties.Count; $i++){
-            $videoProperties.Add(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name, $null)
+    if($null -eq $videoProperties){
+        $videoProperties = [ordered]@{}
+    
+        if($null -eq $presetVideoProperties){
+            for($i = 0; $i -lt $originalVideoProperties.Count; $i++){
+                $videoProperties.Add(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name, $null)
+            }
         }
-    }
-    else{
-        for($i = 0; $i -lt $presetVideoProperties.Count; $i++){
-            $videoProperties.Add((
-                $originalVideoProperties.GetEnumerator() | select-object -Index $i).Name, 
-                ($presetVideoProperties.GetEnumerator() | select-object -Index $i).Value
-            )
+        else{
+            for($i = 0; $i -lt $presetVideoProperties.Count; $i++){
+                $videoProperties.Add((
+                    $originalVideoProperties.GetEnumerator() | select-object -Index $i).Name, 
+                    ($presetVideoProperties.GetEnumerator() | select-object -Index $i).Value
+                )
+            }
         }
     }
 
     Write-Host "Changing the same setting more than once will overwrite the last change.`n"
 
-    while($true){
+    :outer while($true){
         while($true){
             PrintProperties $originalVideoProperties $videoProperties 'Original' $colorArray
             PrintProperties $originalVideoProperties $videoProperties 'Current' $colorArray
@@ -325,25 +405,41 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
         if($videoOption.ToUpper() -eq 'N'){
             PrintProperties $originalVideoProperties $videoProperties 'All' $colorArray
 
-            [string]$userAcknowledgment = Read-Host -Prompt "Would you like to continue with these settings? [y/n]"
-            Write-Host ""
+            while($true){
+                [string]$userAcknowledgment = Read-Host -Prompt "Would you like to continue with these settings? [y/n]"
+                Write-Host ""
 
-            if($userAcknowledgment.ToUpper() -eq 'Y' -or $userAcknowledgment.ToUpper() -eq 'YES'){
-                write-host "Settings finalized...`n"
-                break
-            }
-            elseIf($userAcknowledgment.ToUpper() -eq 'Q'){
-                Quit
+                if($userAcknowledgment.ToUpper() -eq 'Y' -or $userAcknowledgment.ToUpper() -eq 'YES'){
+                    write-host "Settings finalized...`n"
+                    break outer
+                }
+                elseIf($userAcknowledgment.ToUpper() -eq 'Q'){
+                    Quit
+                }
+                elseif($userAcknowledgment.ToUpper() -eq 'N'){
+                    break
+                }
+                else{
+                    Write-Host "Invalid input, please in put `"y`" (yes) or `"n`" (no)..."
+                }
             }
         }
         elseif(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Compression_Level"){
+            Write-Host "Comrpession level can be set from 0-51, with 0 being the lowest level of compression but largest file size, and 51 being the highest level of compression with lowest file size."
+            Write-Host "However, it's worth noting that values below 15 can actually result in an output file larger than the original, " -NoNewline
+            Write-Host "and that values from 15-18 are typically considered `"visually losses`" while still decreasing file size.`n"
+
             while($true){
-                [string]$compressionLevel = Read-Host -Prompt (("Input desired compression level from 1-10 (10 being highest compression), 'c' to cancel, or 'r'",
-                    "to revert to the original compression level") -join " ")
+                [string]$compressionLevel = Read-Host "Input desired compression level"
                     Write-Host ""
 
-                if($compressionLevel -match '^([1-9]|10)$'){
-                    $videoProperties.Compression_Level = $compressionLevel
+                if($compressionLevel -match '^([1-9]|[1][0-7])$'){
+                    if($compressionLevel -eq $originalVideoProperties.Compression_Level){
+                        $videoProperties.Compression_Level = $null
+                    }
+                    else{
+                        $videoProperties.Compression_Level = $compressionLevel
+                    }
 
                     PrintProperties ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
                     ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
@@ -364,7 +460,7 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                             $videoProperties.Compression_Level = $presetVideoProperties.Compression_Level
                         }
                         else{
-                            $videoProperties.Compression_Level = $originalVideoProperties.Compression_Level
+                            $videoProperties.Compression_Level = $null
                         }
                     }
                     
@@ -383,15 +479,77 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                 }
             }
         }
+        elseif(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Pixel_Width"){
+            if($null -eq $videoProperties.Pixel_Height -and $null -eq $videoProperties.Pad){
+                Write-Host "Pixel Height will automatically scale based on Pixel width and aspect ratio if Pixel Height has not been changed from its original value." -ForegroundColor Yellow
+                Write-Host "Setting pixel width or height to its original value manually will count as changing its original value.`n" -ForegroundColor Yellow
+            }
+            elseif($null -eq $videoProperties.Pad -and ($null -eq $videoProperties.Pixel_Width -or $null -eq $videoProperties.Pixel_Height)){
+                Write-Host "Warning:" -BackgroundColor DarkRed -NoNewline
+                Write-Host " If both pixel width and pixel height are changed and Pad is not enabled output video could be distorted.`n" -ForegroundColor Yellow
+            }
+
+            while($true){
+                [string]$pixelWidth = Read-Host -Prompt "Input new pixel width (example: 1920), 'c' to cancel, or 'r' to revert to the original pixel width"
+                Write-Host ""
+
+                if($pixelWidth -match '^([0-9])*$' -and [int]$pixelWidth -ge 1){
+                    $videoProperties.Pixel_Width = $pixelWidth
+
+
+                    PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    'Change' `
+                    $colorArray[$videoOption - 1]
+
+                    Break
+                }
+                elseif($pixelWidth.ToUpper() -match '^(C|R|Q)$'){
+                    switch($pixelWidth.ToUpper()){
+                        'C' {$option = "Cancel"; break}
+                        'R' {$option = "Revert"; break}
+                        'Q' {Quit; break}
+                    }
+
+                    if($pixelWidth.ToUpper() -eq "R"){
+                        if($null -ne $presetVideoProperties){
+                            $videoProperties.Pixel_Width = $presetVideoProperties.Pixel_Width
+                        }
+                        else{
+                            $videoProperties.Pixel_Width = $null
+                        }
+                    }
+                    
+                    PrintProperties `
+                    ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    $option `
+                    $colorArray[$videoOption - 1]
+
+                    break
+                }
+                else{
+                    Write-Host "Invalid pixel width, pixel width can only contain numbers.`n"
+                }
+            }
+        }
         elseif(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Pixel_Height"){
-            Write-Host 'Pixel width will automatically scale based on aspect ratio.' -ForegroundColor Yellow
+            if($null -eq $videoProperties.Pixel_Width -and $null -eq $videoProperties.Pad){
+                Write-Host "Pixel width will automatically scale based on Pixel Height and aspect ratio if Pixel Width has not been changed from its original value." -ForegroundColor Yellow
+                Write-Host "Setting pixel width or height to its original value manually will count as changing its original value.`n" -ForegroundColor Yellow
+            }
+            elseif($null -eq $videoProperties.Pad -and ($null -eq $videoProperties.Pixel_Width -or $null -eq $videoProperties.Pixel_Height)){
+                Write-Host "Warning:" -BackgroundColor DarkRed -NoNewline
+                Write-Host " If both pixel width and pixel height are changed and Pad is not enabled output video could be distorted.`n" -ForegroundColor Yellow
+            }
 
             while($true){
                 [string]$pixelHeight = Read-Host -Prompt "Input new pixel height (example: 1080), 'c' to cancel, or 'r' to revert to the original pixel height"
                 Write-Host ""
 
-                if($pixelHeight -match '^([0-9])*$' -and [int]$pixelHeight -le $originalVideoProperties.Pixel_Height -and [int]$pixelHeight -ge 1){
+                if($pixelHeight -match '^([0-9])*$' -and [int]$pixelHeight -ge 1){
                     $videoProperties.Pixel_Height = $pixelHeight
+
 
                     PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
                     ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
@@ -412,7 +570,7 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                             $videoProperties.Pixel_Height = $presetVideoProperties.Pixel_Height
                         }
                         else{
-                            $videoProperties.Pixel_Height = $originalVideoProperties.Pixel_Height
+                            $videoProperties.Pixel_Height = $null
                         }
                     }
                     
@@ -425,9 +583,64 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                     break
                 }
                 else{
-                    Write-Host "Invalid pixel height, pixel height can only contain numbers and cannot be larger than the orginal pixel height (" -NoNewline
-                    Write-Host "$($originalVideoProperties.Pixel_Height)" -NoNewline -ForegroundColor Yellow
-                    Write-Host "). `n"
+                    Write-Host "Invalid pixel height, pixel height can only contain numbers.`n"
+                }
+            }
+        }
+        elseif(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Pad"){
+            Write-Host "When pad is enabled the original aspect ratio of the video will be preserved regardless of what you change pixel width and pixel height to." -ForegroundColor Yellow
+
+            if($null -eq $videoProperties.Pixel_Width -or $null -eq $videoProperties.Pixel_Height){
+                Write-Host "Enabling Pad without changing both pixel width and pixel Height will have no effect on the output video.`n" -ForegroundColor Yellow
+            }
+            elseif($null -ne $videoProperties.Pixel_Width -or $null -ne $videoProperties.Pixel_Height -and $null -ne $videoProperties.Pad){
+                Write-Host "Warning:" -BackgroundColor DarkRed -NoNewline
+                Write-Host " Disabling pad when both pixel width and pixel height have been changed could result in distortion of the output video.`n" -ForegroundColor Yellow
+            }
+            else{
+                Write-Host ""
+            }
+
+            while($true){
+                [string]$pad = Read-Host -Prompt "Would you like to pad the new video? [y/n]"
+                Write-Host ""
+
+                if($pad.ToUpper() -match "^(Y|N)$"){
+                    $videoProperties.Pad = $pad
+
+                    PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    'Change' `
+                    $colorArray[$videoOption - 1]
+
+                    Break
+                }
+                elseif($pad.ToUpper() -match '^(C|R|Q)$'){
+                    switch($pad.ToUpper()){
+                        'C' {$option = "Cancel"; break}
+                        'R' {$option = "Revert"; break}
+                        'Q' {Quit; break}
+                    }
+
+                    if($pad.ToUpper() -eq "R"){
+                        if($null -ne $presetVideoProperties){
+                            $videoProperties.Pad = $presetVideoProperties.Pad
+                        }
+                        else{
+                            $videoProperties.Pad = $null
+                        }
+                    }
+
+                    PrintProperties `
+                    ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    $option `
+                    $colorArray[$videoOption - 1]
+
+                    break
+                }
+                else{
+                    Write-Host "Invalid input, pad must be set to `"y`" (yes) or `"n`" (no).`n"
                 }
             }
         }
@@ -437,7 +650,12 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                 Write-Host ""
 
                 if($fps -match '^([0-9])*$' -and [int]$fps -le $originalVideoProperties.FPS -and [int]$fps -ge 1){
-                    $videoProperties.FPS = $fps
+                    if($fps -eq $originalVideoProperties.FPS){
+                        $videoProperties.FPS = $null
+                    }
+                    else{
+                        $videoProperties.FPS = $fps
+                    }
 
                     PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
                     ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
@@ -458,7 +676,7 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                             $videoProperties.FPS = $presetVideoProperties.FPS
                         }
                         else{
-                            $videoProperties.FPS = $originalVideoProperties.FPS
+                            $videoProperties.FPS = $null
                         }
                     }
                     
@@ -485,7 +703,12 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                 $audioTrackCount = [Regex]::Match($originalVideoProperties.Audio_Track_Number, "(?<=\/).*").Value
 
                 if($audioTrackNumber -match "^[1-$audioTrackCount]$"){
-                    $videoProperties.Audio_Track_Number = "$audioTrackNumber/$audioTrackCount"
+                    if($audioTrackNumber -eq $originalVideoProperties.Audio_Track_Number){
+                        $videoProperties.Audio_Track_Number = $null
+                    }
+                    else{
+                        $videoProperties.Audio_Track_Number = $audioTrackNumber
+                    }
 
                     PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
                     ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
@@ -506,7 +729,7 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                             $videoProperties.Audio_Track_Number = $presetVideoProperties.Audio_Track_Number
                         }
                         else{
-                            $videoProperties.Audio_Track_Number = $originalVideoProperties.Audio_Track_Number
+                            $videoProperties.Audio_Track_Number = $null
                         }
                     }
 
@@ -529,11 +752,16 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
             Write-Host "Audio level is a desired increase or decrease of audio volume in decibels (examples: 22dB, -6dB)." -ForegroundColor Yellow
             
             while($true){
-                [string]$audioTrackLevel = Read-Host -Prompt "Input which audio track you'd like in the new video (example: 2), 'c' to cancel, or 'r' to revert to the first audio track"
+                [string]$audioLevel = Read-Host -Prompt "Input which audio track you'd like in the new video (example: 2), 'c' to cancel, or 'r' to revert to the first audio track"
                 Write-Host ""
 
-                if($audioTrackLevel -match '^-?([0-9]*)$'){
-                    $videoProperties.Audio_Level = $audioTrackLevel
+                if($audioLevel -match '^-?([0-9]*)$'){
+                    if($audioLevel -eq $originalVideoProperties.Audio_Level){
+                        $videoProperties.Audio_Level = $null
+                    }
+                    else{
+                        $videoProperties.Audio_Level = $audioLevel
+                    }
 
                     PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
                     ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
@@ -542,19 +770,19 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
 
                     Break
                 }
-                elseif($audioTrackLevel.ToUpper() -match '^(C|R|Q)$'){
-                    switch($audioTrackLevel.ToUpper()){
+                elseif($audioLevel.ToUpper() -match '^(C|R|Q)$'){
+                    switch($audioLevel.ToUpper()){
                         'C' {$option = "Cancel"; break}
                         'R' {$option = "Revert"; break}
                         'Q' {Quit; break}
                     }
 
-                    if($audioTrackLevel.ToUpper() -eq "R"){
+                    if($audioLevel.ToUpper() -eq "R"){
                         if($null -ne $presetVideoProperties){
                             $videoProperties.Audio_Level = $presetVideoProperties.Audio_Level
                         }
                         else{
-                            $videoProperties.Audio_Level = $originalVideoProperties.Audio_Level
+                            $videoProperties.Audio_Level = $null
                         }
                     }
                     
@@ -571,12 +799,440 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                 }
             }
         }
+        elseIf(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Left_Crop"){
+            $width = $originalVideoProperties.Resolution.Substring(0, $originalVideoProperties.Resolution.IndexOf("x"))
+
+            if($null -eq $videoProperties.Resolution){
+                if($null -eq $presetVideoProperties){
+                    $height = $originalVideoProperties.Resolution.Substring($originalVideoProperties.Resolution.IndexOf("x") + 1)
+                }
+                else{
+                    $height = $presetVideoProperties.Resolution.Substring($originalVideoProperties.Resolution.IndexOf("x") + 1)
+                }
+            }
+            else{
+                $height = $videoProperties.Resolution.Substring($videoProperties.Resolution.IndexOf("x") + 1)
+            }
+            
+            if($null -eq $videoProperties.Right_Crop){
+                if($null -eq $presetVideoProperties){
+                    $rightCrop = $originalVideoProperties.Right_Crop
+                }
+                else{
+                    $rightCrop = $presetVideoProperties.Right_Crop
+                }
+            }
+            else{
+                $rightCrop = $videoProperties.Right_Crop
+            }
+
+            while($true){
+                [string]$leftCrop = Read-Host -Prompt "Input how much you'd like to crop the left side of the video (example: 480), 'c' to cancel, or 'r' to revert to the first audio track"
+                Write-Host ""
+
+                if($leftCrop.ToUpper() -match '^(C|R|Q)$'){
+                    switch($leftCrop.ToUpper()){
+                        'C' {$option = "Cancel"; break}
+                        'R' {$option = "Revert"; break}
+                        'Q' {Quit; break}
+                    }
+
+                    if($leftCrop.ToUpper() -eq "R"){
+                        if($null -ne $presetVideoProperties){
+                            $videoProperties.Left_Crop = $presetVideoProperties.Left_Crop
+
+                            $resolution = "$([int]$width - [int]$presetVideoProperties.LeftCrop - [int]$rightCrop)x$($height)"
+
+                            if($resolution -eq $originalVideoProperties.Resolution){
+                                $videoProperties.Resolution = $null
+                            }
+                            else{
+                                $videoProperties.Resolution = $resolution
+                            }
+                        }
+                        else{
+                            $videoProperties.Left_Crop = $null
+
+                            $resolution = "$([int]$width - [int]$rightCrop)x$($height)"
+
+                            if($resolution -eq $originalVideoProperties.Resolution){
+                                $videoProperties.Resolution = $null
+                            }
+                            else{
+                                $videoProperties.Resolution = $resolution
+                            }
+                        }
+                    }
+                    
+                    PrintProperties `
+                    ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    $option `
+                    $colorArray[$videoOption - 1]
+
+                    break
+                }
+                elseif([int]$width -gt [int]$leftCrop + [int]$rightCrop -and $leftCrop -match '^([0-9])*$'){
+                    if($leftCrop -eq $originalVideoProperties.Left_Crop){
+                        $videoProperties.Left_Crop = $null
+                    }
+                    else{
+                        $videoProperties.Left_Crop = $leftCrop
+                    }
+
+                    if($leftCrop -eq "0" -and $rightCrop -eq "0"){
+                        $resolution = "$($width)x$($height)"
+                    }
+                    else{
+                        $resolution = "$([int]$width - [int]$leftCrop - [int]$rightCrop)x$($height)"
+                    }
+
+                    if($resolution -eq $originalVideoProperties.Resolution){
+                        $videoProperties.Resolution = $null
+                    }
+                    else{
+                        $videoProperties.Resolution = $resolution
+                    }
+
+                    PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    'Change' `
+                    $colorArray[$videoOption - 1]
+
+                    Break
+                }
+                else{
+                    Write-Host "Invalid left crop, left crop must be a number and less than total pixel width, right crop must also be taken into account (Width > (Left + Right))...`n"
+                }
+            }
+        }
+        elseIf(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Right_Crop"){
+            $width = $originalVideoProperties.Resolution.Substring(0, $originalVideoProperties.Resolution.IndexOf("x"))
+
+            if($null -eq $videoProperties.Resolution){
+                if($null -eq $presetVideoProperties){
+                    $height = $originalVideoProperties.Resolution.Substring($originalVideoProperties.Resolution.IndexOf("x") + 1)
+                }
+                else{
+                    $height = $presetVideoProperties.Resolution.Substring($originalVideoProperties.Resolution.IndexOf("x") + 1)
+                }
+            }
+            else{
+                $height = $videoProperties.Resolution.Substring($videoProperties.Resolution.IndexOf("x") + 1)
+            }
+            
+            if($null -eq $videoProperties.Left_Crop){
+                if($null -eq $presetVideoProperties){
+                    $leftCrop = $originalVideoProperties.Left_Crop
+                }
+                else{
+                    $leftCrop = $presetVideoProperties.Left_Crop
+                }
+            }
+            else{
+                $leftCrop = $videoProperties.Left_Crop
+            }
+
+            while($true){
+                [string]$rightCrop = Read-Host -Prompt "Input how much you'd like to crop the right side of the video (example: 480), 'c' to cancel, or 'r' to revert to the first audio track"
+                Write-Host ""
+
+                if($rightCrop.ToUpper() -match '^(C|R|Q)$'){
+                    switch($rightCrop.ToUpper()){
+                        'C' {$option = "Cancel"; break}
+                        'R' {$option = "Revert"; break}
+                        'Q' {Quit; break}
+                    }
+
+                    if($rightCrop.ToUpper() -eq "R"){
+                        if($null -ne $presetVideoProperties){
+                            $videoProperties.Right_Crop = $presetVideoProperties.Right_Crop
+
+                            $resolution = "$([int]$width - [int]$leftCrop - [int]$presetVideoProperties.Right_Crop)x$($height)"
+
+                            if($resolution -eq $originalVideoProperties.Resolution){
+                                $videoProperties.Resolution = $null
+                            }
+                            else{
+                                $videoProperties.Resolution = $resolution
+                            }
+                        }
+                        else{
+                            $videoProperties.Right_Crop = $null
+
+                            $resolution = "$([int]$width - [int]$leftCrop)x$($height)"
+
+                            if($resolution -eq $originalVideoProperties.Resolution){
+                                $videoProperties.Resolution = $null
+                            }
+                            else{
+                                $videoProperties.Resolution = $resolution
+                            }
+                        }
+                    }
+                    
+                    PrintProperties `
+                    ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    $option `
+                    $colorArray[$videoOption - 1]
+
+                    break
+                }
+                elseif([int]$width -gt [int]$leftCrop + [int]$rightCrop -and $rightCrop -match '^([0-9])*$'){
+                    if($rightCrop -eq $originalVideoProperties.Right_Crop){
+                        $videoProperties.Right_Crop = $null
+                    }
+                    else{
+                        $videoProperties.Right_Crop = $rightCrop
+                    }
+
+                    if($leftCrop -eq 0 -and $rightCrop -eq 0){
+                        $resolution = "$($width)x$($height)"
+                    }
+                    else{
+                        $resolution = "$([int]$width - [int]$leftCrop - [int]$rightCrop)x$($height)"
+                    }
+
+                    if($resolution -eq $originalVideoProperties.Resolution){
+                        $videoProperties.Resolution = $null
+                    }
+                    else{
+                        $videoProperties.Resolution = $resolution
+                    }
+
+                    PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    'Change' `
+                    $colorArray[$videoOption - 1]
+
+                    Break
+                }
+                else{
+                    Write-Host "Invalid right crop, right crop must be a number and less than total pixel width, left crop must also be taken into account (Width > (Left + Right))...`n"
+                }
+            }
+        }
+        elseIf(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Top_Crop"){
+            if($null -eq $videoProperties.Resolution){
+                if($null -eq $presetVideoProperties){
+                    $width = $originalVideoProperties.Resolution.Substring(0, $originalVideoProperties.Resolution.IndexOf("x"))
+                }
+                else{
+                    $width = $presetVideoProperties.Resolution.Substring(0, $originalVideoProperties.Resolution.IndexOf("x"))
+                }
+            }
+            else{
+                $width = $videoProperties.Resolution.Substring(0, $videoProperties.Resolution.IndexOf("x"))
+            }
+
+            $height = $originalVideoProperties.Resolution.Substring($originalVideoProperties.Resolution.IndexOf("x") + 1)
+            
+            if($null -eq $videoProperties.Bottom_Crop){
+                if($null -eq $presetVideoProperties){
+                    $bottomCrop = $originalVideoProperties.Bottom_Crop
+                }
+                else{
+                    $bottomCrop = $presetVideoProperties.Bottom_Crop
+                }
+            }
+            else{
+                $bottomCrop = $videoProperties.Bottom_Crop
+            }
+
+            while($true){
+                [string]$topCrop = Read-Host -Prompt "Input how much you'd like to crop the top of the video (example: 480), 'c' to cancel, or 'r' to revert to the first audio track"
+                Write-Host ""
+
+                if($topCrop.ToUpper() -match '^(C|R|Q)$'){
+                    switch($topCrop.ToUpper()){
+                        'C' {$option = "Cancel"; break}
+                        'R' {$option = "Revert"; break}
+                        'Q' {Quit; break}
+                    }
+
+                    if($topCrop.ToUpper() -eq "R"){
+                        if($null -ne $presetVideoProperties){
+                            $videoProperties.Top_Crop = $presetVideoProperties.Top_Crop
+
+                            $resolution = "$($width)x$([int]$height - [int]$presetVideoProperties.Top_Crop - [int]$bottomCrop)"
+
+                            if($resolution -eq $originalVideoProperties.Resolution){
+                                $videoProperties.Resolution = $null
+                            }
+                            else{
+                                $videoProperties.Resolution = $resolution
+                            }
+                        }
+                        else{
+                            $videoProperties.Top_Crop = $null
+
+                            $resolution = "$($width)x$([int]$height - [int]$bottomCrop)"
+
+                            if($resolution -eq $originalVideoProperties.Resolution){
+                                $videoProperties.Resolution = $null
+                            }
+                            else{
+                                $videoProperties.Resolution = $resolution
+                            }
+                        }
+                    }
+                    
+                    PrintProperties `
+                    ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    $option `
+                    $colorArray[$videoOption - 1]
+
+                    break
+                }
+                elseif([int]$height -gt [int]$topCrop + [int]$bottomCrop -and $topCrop -match '^([0-9])*$'){
+                    if($topCrop -eq $originalVideoProperties.Top_Crop){
+                        $videoProperties.Top_Crop = $null
+                    }
+                    else{
+                        $videoProperties.Top_Crop = $topCrop
+                    }
+
+                    if($topCrop -eq 0 -and $bottomCrop -eq 0){
+                        $resolution = "$($width)x$($height)"
+                    }
+                    else{
+                        $resolution = "$($width)x$([int]$height - [int]$topCrop - [int]$bottomCrop)"
+                    }
+
+                    if($resolution -eq $originalVideoProperties.Resolution){
+                        $videoProperties.Resolution = $null
+                    }
+                    else{
+                        $videoProperties.Resolution = $resolution
+                    }
+
+                    PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    'Change' `
+                    $colorArray[$videoOption - 1]
+
+                    Break
+                }
+                else{
+                    Write-Host "Invalid top crop, top crop must be a number and less than total pixel height, bottom crop must also be taken into account (Height > (Top + Bottom))...`n"
+                }
+            }
+        }
+        elseIf(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Bottom_Crop"){
+            if($null -eq $videoProperties.Resolution){
+                if($null -eq $presetVideoProperties){
+                    $width = $originalVideoProperties.Resolution.Substring(0, $originalVideoProperties.Resolution.IndexOf("x"))
+                }
+                else{
+                    $width = $presetVideoProperties.Resolution.Substring(0, $originalVideoProperties.Resolution.IndexOf("x"))
+                }
+            }
+            else{
+                $width = $videoProperties.Resolution.Substring(0, $videoProperties.Resolution.IndexOf("x"))
+            }
+
+            $height = $originalVideoProperties.Resolution.Substring($originalVideoProperties.Resolution.IndexOf("x") + 1)
+            
+            if($null -eq $videoProperties.Top_Crop){
+                if($null -eq $presetVideoProperties){
+                    $topCrop = $originalVideoProperties.Top_Crop
+                }
+                else{
+                    $topCrop = $presetVideoProperties.Top_Crop
+                }
+            }
+            else{
+                $topCrop = $videoProperties.Top_Crop
+            }
+
+            while($true){
+                [string]$bottomCrop = Read-Host -Prompt "Input how much you'd like to crop the top of the video (example: 480), 'c' to cancel, or 'r' to revert to the first audio track"
+                Write-Host ""
+
+                if($bottomCrop.ToUpper() -match '^(C|R|Q)$'){
+                    switch($bottomCrop.ToUpper()){
+                        'C' {$option = "Cancel"; break}
+                        'R' {$option = "Revert"; break}
+                        'Q' {Quit; break}
+                    }
+
+                    if($bottomCrop.ToUpper() -eq "R"){
+                        if($null -ne $presetVideoProperties){
+                            $videoProperties.Bottom_Crop = $presetVideoProperties.Bottom_Crop
+
+                            $resolution = "$($width)x$([int]$height - [int]$topCrop - [int]$presetVideoProperties.Bottom_Crop)"
+
+                            if($resolution -eq $originalVideoProperties.Resolution){
+                                $videoProperties.Resolution = $null
+                            }
+                            else{
+                                $videoProperties.Resolution = $resolution
+                            }
+                        }
+                        else{
+                            $videoProperties.Bottom_Crop = $null
+
+                            $resolution = "$($width)x$([int]$height - [int]$topCrop)"
+
+                            if($resolution -eq $originalVideoProperties.Resolution){
+                                $videoProperties.Resolution = $null
+                            }
+                            else{
+                                $videoProperties.Resolution = $resolution
+                            }
+                        }
+                    }
+                    
+                    PrintProperties `
+                    ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    $option `
+                    $colorArray[$videoOption - 1]
+
+                    break
+                }
+                elseif([int]$height -gt [int]$topCrop + [int]$bottomCrop -and $bottomCrop -match '^([0-9])*$'){
+                    if($bottomCrop -eq $originalVideoProperties.Bottom_Crop){
+                        $videoProperties.Bottom_Crop = $null
+                    }
+                    else{
+                        $videoProperties.Bottom_Crop = $bottomCrop
+                    }
+
+                    if($topCrop -eq 0 -and $bottomCrop -eq 0){
+                        $resolution = "$($width)x$($height)"
+                    }
+                    else{
+                        $resolution = "$($width)x$([int]$height - [int]$topCrop - [int]$bottomCrop)"
+                    }
+
+                    if($resolution -eq $originalVideoProperties.Resolution){
+                        $videoProperties.Resolution = $null
+                    }
+                    else{
+                        $videoProperties.Resolution = $resolution
+                    }
+
+                    PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                    'Change' `
+                    $colorArray[$videoOption - 1]
+
+                    Break
+                }
+                else{
+                    Write-Host "Invalid bottom crop, bottom crop must be a number and less than total pixel height, top crop must also be taken into account (Height > (Top + Bottom))...`n"
+                }
+            }
+        }
         elseif(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Start_Time"){
             if($null -eq $videoProperties.End_Time){
                 [double]$endTimeDuration = [double]$originalVideoProperties.Total_Clip_Duration
             }
             else{
-                $endTimeDuration = ConvertTimeStamp $endTime
+                $endTimeDuration = ConvertTimeStamp $videoProperties.End_Time
             }
 
             while($true){
@@ -588,7 +1244,13 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
 
                 if($startTime -match '^([0-9][0-9]:[0-5][0-9]:[0-5][0-9][.][0-9][0-9][0-9])$' -and `
                 (ConvertTimeStamp $startTime) -lt $originalVideoProperties.Total_Clip_Duration){
-                    $videoProperties.Start_Time = $startTime
+                    if($startTime -eq $originalVideoProperties.Start_Time){
+                        $videoProperties.Start_Time = $null
+                    }
+                    else{
+                        $videoProperties.Start_Time = $startTime
+                    }
+
                     $startTimeDuration = ConvertTimeStamp $startTime
                     $videoProperties.Total_Clip_Duration = [double]$endTimeDuration - [double]$startTimeDuration
 
@@ -609,9 +1271,23 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                     if($startTime.ToUpper() -eq "R"){
                         if($null -ne $presetVideoProperties){
                             $videoProperties.Start_Time = $presetVideoProperties.Start_Time
+
+                            if($null -eq $videoProperties.End_Time){
+                                $videoProperties.Duraion = $originalVideoProperties.Total_Clip_Duration - (ConvertTimeStamp $presetVideoProperties.Start_Time)
+                            }
+                            else{
+                                $videoProperties.Duraion = (ConvertTimeStamp $videoProperties.End_Time) - (ConvertTimeStamp $presetVideoProperties.Start_Time)
+                            }
                         }
                         else{
-                            $videoProperties.Start_Time = $originalVideoProperties.Start_Time
+                            $videoProperties.Start_Time = $null
+
+                            if($null -eq $videoProperties.End_Time){
+                                $videoProperties.Total_Clip_Duration = $null
+                            }
+                            else{
+                                $videoProperties.Total_Clip_Duration = (ConvertTimeStamp $videoProperties.End_Time) - (ConvertTimeStamp $originalVideoProperties.Start_Time)
+                            }
                         }
                     }
                     
@@ -635,7 +1311,7 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                 [double]$startTimeDuration = 0
             }
             else{
-                $startTimeDuration = ConvertTimeStamp $startTime
+                $startTimeDuration = ConvertTimeStamp $videoProperties.Start_Time
             }
 
             while($true){
@@ -648,7 +1324,13 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                 if($endTime -match '^([0-9][0-9]:[0-5][0-9]:[0-5][0-9][.][0-9][0-9][0-9])$' -and `
                 (ConvertTimeStamp $endTime) -le $originalVideoProperties.Total_Clip_Duration -and `
                 (ConvertTimeStamp $endTime) -gt $startTimeDuration){
-                    $videoProperties.End_Time = $endTime
+                    if($endTime -eq $originalVideoProperties.End_Time){
+                        $videoProperties.End_Time = $null
+                    }
+                    else{
+                        $videoProperties.End_Time = $endTime
+                    }
+
                     $endTimeDuration = ConvertTimeStamp $endTime
                     $videoProperties.Total_Clip_Duration = [double]$endTimeDuration - [double]$startTimeDuration
 
@@ -669,9 +1351,23 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
                     if($endTime.ToUpper() -eq "R"){
                         if($null -ne $presetVideoProperties){
                             $videoProperties.End_Time = $presetVideoProperties.End_Time
+
+                            if($null -eq $videoProperties.Start_Time){
+                                $videoProperties.Total_Clip_Duration = (ConvertTimeStamp $presetVideoProperties.End_Time) - (ConvertTimeStamp $originalVideoProperties.Start_Time)
+                            }
+                            else{
+                                $videoProperties.Total_Clip_Duration = (ConvertTimeStamp $presetVideoProperties.End_Time) - (ConvertTimeStamp $videoProperties.Start_Time)
+                            }
                         }
                         else{
-                            $videoProperties.End_Time = $originalVideoProperties.End_Time
+                            $videoProperties.End_Time = $null
+
+                            if($null -eq $videoProperties.Start_Time){
+                                $videoProperties.Total_Clip_Duration = $null
+                            }
+                            else{
+                                $videoProperties.Total_Clip_Duration = (ConvertTimeStamp $originalVideoProperties.End_Time) - (ConvertTimeStamp $videoProperties.Start_Time)
+                            }
                         }
                     }
                     
@@ -697,18 +1393,21 @@ function GetVideoProperties($originalVideoProperties, $presetVideoProperties){
 
 
 function GetNewFilePath($tag, $filePath){
-    $answer = Read-Host "Enter new file name, if left blank name with be autmoatically generate and tagged with `"_$tag`""
+    $answer = Read-Host "Enter new file name, if left blank name will be autmoatically generate and tagged with `"_$tag`""
     Write-host ""
 
-    if($tag -eq "gif"){
+    if($tag -eq "Gif"){
         $extension = "gif"
+    }
+    elseif($tag -eq "Concatenated"){
+        $extension = $filePath.Substring($filePath.LastIndexOf(".") + 1)
     }
     else{
         $extension = "mp4"
     }
 
     if($null -eq $answer -or $answer -eq ""){
-        $newFilePath = "$($filePath.substring(0, $filePath.Length - 4))_$tag.$extension"
+        $newFilePath = "$($filePath.Substring(0, $filePath.LastIndexOf(".")))_$tag.$extension"
     }
     else{
         $newFilepath = "$(Split-Path $filePath -Parent)\$answer.$extension"
@@ -730,7 +1429,7 @@ function GetModificationDate($newFilePath){
 }
 
 
-function DeleteExistingFiles($newFilePath){
+function DeleteExistingFiles($tag, $newFilePath){
     if(Test-Path -Path $newFilePath){
         Write-Host "This file already exist:" -ForegroundColor Yellow
 
@@ -739,26 +1438,51 @@ function DeleteExistingFiles($newFilePath){
         }
 
         $response = Read-Host "`nWould you like to overwrite them? (Deletion will occur upon affirmative response) [y/n]"
-
-        if($response.ToUpper() -eq 'Y' -or $response.ToUpper() -eq 'YES'){
-            Write-Host ""
-
-            [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile("$newFilePath",'OnlyErrorDialogs','SendToRecycleBin')
-            Write-Host "$filePath was deleted..." -ForegroundColor Red
-        }
-        else{
-            Write-Host "`nNo files were deleted..."
-
-            Quit
-        }
-
         Write-Host ""
+
+        :outer while($true){
+            if($response.ToUpper() -eq 'Y' -or $response.ToUpper() -eq 'YES'){
+                [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile("$newFilePath",'OnlyErrorDialogs','SendToRecycleBin')
+                Write-Host "$filePath was deleted...`n" -ForegroundColor Red
+
+                break
+            }
+            elseif($response.ToUpper() -eq 'N'){
+                while($true){
+                    $newestFilePath = GetNewFilePath $tag $filePath 
+
+                    if($newestFilePath.ToUpper() -eq "Q"){
+                        Quit
+                    }
+                    elseif($newestFilePath.ToUpper() -eq $newFilePath.ToUpper()){
+                        Write-Host "You said you wanted to change the output file name to avoid deletion of an existing file but then you didn't actually change the name, try again..."
+                    }
+                    else{
+                        $newFilePath = $newestFilePath
+
+                        break outer
+                    }
+                }
+            }
+            else{
+                Write-Host "Invalid input, answer must be `"y`" (Yes), `"n`" (No), or `"q`" (quit)..."
+            }
+        }
     }
+
+    return $newFilePath
 }
 
 
 function runFFCommand($argumentList, $program){
     Start-Process -FilePath "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin\$program.exe" -Wait -NoNewWindow -ArgumentList $argumentList
+}
+
+
+function DeleteTempFiles($filePath){
+    if(Test-Path $filePath){
+        [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($filePath,'OnlyErrorDialogs','SendToRecycleBin')
+    }
 }
 
 
@@ -782,6 +1506,26 @@ function TestNewFilePath($newFilePath, $fileModificationDate){
     }
 
     Write-Host ""
+}
+
+
+function KeepTweaking(){
+    while($true){
+        $keepTweaking = Read-Host "Would you like to continue tweaking settings and output again? [y=Yes, n=No]"
+        Write-Host ""
+
+        if($keepTweaking.ToUpper() -eq "Q"){
+            Quit
+        }
+        elseif($keepTweaking.ToUpper() -match "^(Y|N)$"){
+            break
+        }
+        else{
+            Write-Host "Invalid input, answer must be `"y`" (Yes), `"n`" (No), or `"q`" (quit)..."
+        }
+    }
+
+    return $keepTweaking
 }
 
 
