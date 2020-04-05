@@ -109,7 +109,7 @@ function cloneGit($cloneBool, $relativePath){
                 if($fileCount.Count -gt 50){
                     while($true){
                         Write-Host "There are more than 50 files in $relativePath," -ForegroundColor Red
-                        Write-Host "EVERYTHING INSIDE WILL BE DELETED ARE YOU SURE YOU WANT TO CONTINUE? [y/n]" -ForegroundColor Red
+                        Write-Host "EVERYTHING INSIDE WILL BE DELETED ARE YOU SURE YOU WANT TO CONTINUE? [y/n]: " -ForegroundColor Red
                         $secondConfirmation = $Host.UI.ReadLine()
 
                         if($secondConfirmation -eq "y"){
