@@ -442,7 +442,7 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                 [string]$compressionLevel = Read-Host "Input desired compression level"
                     Write-Host ""
 
-                if($compressionLevel -match '^([1-9]|[1][0-7])$'){
+                if($compressionLevel -match '^([0-9]|[1-4][0-9]|[5][0-1])$'){
                     if($compressionLevel -eq $originalVideoProperties.Compression_Level){
                         $videoProperties.Compression_Level = $null
                     }

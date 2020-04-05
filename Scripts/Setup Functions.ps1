@@ -1,3 +1,10 @@
+function Quit(){
+    write-host('Closing program, press [Enter] to exit...') -NoNewLine
+    $Host.UI.ReadLine()
+
+    exit
+}
+
 function CheckRequiredPackages(){
     $chocoBool = $true
     $gitBool = $true
@@ -91,6 +98,45 @@ function InstallPackages($installBool){
 
 function cloneGit($cloneBool, $relativePath){
     if($cloneBool){
+        while($true){
+            Write-Host "When updating files old files are deleted," -ForegroundColor Yellow
+            $confirmation = Read-Host "everything currently in $relativePath will be deleted, would you like to continue? [y/n]" -ForegroundColor Yellow
+
+            if($confirmation -eq "y"){
+                $fileCount = Get-ChildItem -Path $relativePath -Recurse -Depth 5
+
+                if($fileCount -gt 50){
+                    while($true){
+                        Write-Host "There are more than 50 files in $relativePath," -ForegroundColor Red
+                        $secondConfirmation = Read-Host "EVERYTHING INSIDE WILL BE DELETED ARE YOU SURE YOU WANT TO CONTINUE? [y/n]" -ForegroundColor Red
+
+                        if($secondConfirmation -eq "y"){
+                            break
+                        }
+                        elseif($secondConfirmation -eq "n"){
+                            Write-Host "No files were updated or deleted...`n"
+                
+                            Quit 
+                        }
+                        else{
+                            Write-Host "Invalid input, valid input is `"y`" (yes) or `"n`" (no)..."
+                        }
+                    }
+                }
+                else{
+                    break
+                }
+            }
+            elseif($confirmation -eq "n"){
+                Write-Host "No files were updated or deleted...`n"
+                
+                Quit
+            }
+            else{
+                Write-Host "Invalid input, valid input is `"y`" (yes) or `"n`" (no)..."
+            }
+        }
+
         Write-Host "Deleting old files..."
         Remove-Item -LiteralPath $relativePath -Force -Recurse
         Start-Sleep 2
