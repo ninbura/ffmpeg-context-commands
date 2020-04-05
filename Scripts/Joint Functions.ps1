@@ -180,6 +180,10 @@ function PrintProperties($originalVideoProperties, $videoProperties, $type, $col
     if($type -eq 'Original'){
         Write-Host "Original properties: " -NoNewline
         for($i = 0; $i -lt $originalVideoProperties.Count; $i++){
+            if($i -eq 6){
+                Write-Host ""
+            }
+
             if(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -eq "Total_Clip_Duration"){
                 $newDuration = ConvertDuration $originalVideoProperties.Total_Clip_Duration
     
@@ -201,6 +205,10 @@ function PrintProperties($originalVideoProperties, $videoProperties, $type, $col
     elseif($type -eq 'Current'){
         Write-Host "Current properties : " -NoNewline
         for($i = 0; $i -lt $originalVideoProperties.Count; $i++){
+            if($i -eq 6){
+                Write-Host ""
+            }
+
             if(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -eq "Total_Clip_Duration"){
                 if($null -eq ($videoProperties.GetEnumerator() | select-object -Index $i).value){
                     $newDuration = ConvertDuration $originalVideoProperties.Total_Clip_Duration
