@@ -99,16 +99,18 @@ function InstallPackages($installBool){
 function cloneGit($cloneBool, $relativePath){
     if($cloneBool){
         while($true){
-            Write-Host "When updating files old files are deleted," -ForegroundColor Yellow
-            $confirmation = Read-Host "everything currently in $relativePath will be deleted, would you like to continue? [y/n]" -ForegroundColor Yellow
+            Write-Host "When updating files old files are deleted, everything currently in $relativePath" -ForegroundColor Yellow
+            Write-Host "Will be deleted, would you like to continue? [y/n]: " -NoNewline -ForegroundColor Yellow
+            $confirmation = $Host.UI.ReadLine()
 
             if($confirmation -eq "y"){
                 $fileCount = Get-ChildItem -Path $relativePath -Recurse -Depth 5
 
-                if($fileCount -gt 50){
+                if($fileCount.Count -gt 50){
                     while($true){
                         Write-Host "There are more than 50 files in $relativePath," -ForegroundColor Red
-                        $secondConfirmation = Read-Host "EVERYTHING INSIDE WILL BE DELETED ARE YOU SURE YOU WANT TO CONTINUE? [y/n]" -ForegroundColor Red
+                        Write-Host "EVERYTHING INSIDE WILL BE DELETED ARE YOU SURE YOU WANT TO CONTINUE? [y/n]" -ForegroundColor Red
+                        $secondConfirmation = $Host.UI.ReadLine()
 
                         if($secondConfirmation -eq "y"){
                             break
