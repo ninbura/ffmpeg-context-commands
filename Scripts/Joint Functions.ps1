@@ -9,12 +9,12 @@ function Startup(){
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
     $gitBool = $true
 
-    # try{
-        git # | Out-Null
-    # }
-    # catch{
-    #     $gitBool = $false
-    # }
+    try{
+        git | Out-Null
+    }
+    catch{
+        $gitBool = $false
+    }
 
     if($gitBool){
         $updateBool = $false
