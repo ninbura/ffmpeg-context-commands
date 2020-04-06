@@ -22,7 +22,9 @@ function Startup(){
         Set-Location $parentDirectory
 
         git fetch | Out-Null
+        Write-Host "Before"
         [Array]$checkForUpdates = git status
+        Write-Host "After"
 
         foreach($line in $checkForUpdates){
             if($line -match "Your branch is behind"){
