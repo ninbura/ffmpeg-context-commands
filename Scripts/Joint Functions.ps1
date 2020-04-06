@@ -41,7 +41,7 @@ function Startup(){
 
                     Start-Sleep 1
 
-                    Start-Process powershell -Verb runAs -ExecutionPolicy Bypass -WindowStyle Maximized -ArgumentList "-File `"$parentDirectory\Scripts\Setup.ps1`""
+                    Start-Process powershell -Verb runAs -WindowStyle Maximized -ArgumentList "-File `"$parentDirectory\Scripts\Setup.ps1`""
 
                     read-host ""
 
