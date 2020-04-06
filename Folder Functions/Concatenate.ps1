@@ -43,7 +43,7 @@ CheckFiles $fileArray
 $newFilePath = GetNewFilePath "Concatenated" $fileArray[0]
 $fileModificationDate = GetModificationDate $newFilePath
 $newFilePath = DeleteExistingFiles "Concatenated" $newFilePath
-$formattedFileArray = $fileArray | ForEach-Object {"file `"$_`""}
+$formattedFileArray = $fileArray | ForEach-Object {"file `"$($_.Replace("'", "'\''"))`""}
 $formattedFileArray | Out-File -FilePath "$filePath\Concat.txt" -Force -Encoding ASCII
 $argumentList = @("-loglevel", "error", "-stats", "-f", "concat", "-safe", "0", "-i", "`"$filePath\Concat.txt`"", "-c", "copy", "`"$newFilePath`"")
 Write-Host "Video is building..."
