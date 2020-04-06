@@ -96,64 +96,74 @@ function InstallPackages($installBool){
     }
 }
 
-function cloneGit($cloneBool, $relativePath){
-    if($cloneBool){
-        while($true){
-            Write-Host "`nWhen updating files old files are deleted, everything currently in `"$relativePath`"" -ForegroundColor Yellow
-            Write-Host "Will be deleted, would you like to continue? [y/n]: " -NoNewline -ForegroundColor Yellow
-            $confirmation = $Host.UI.ReadLine()
-            Write-Host ""
+function UpdateFiles($updateBool, $relativePath){
+    if($updateBool){
+        if(!(Test-Path -path "$relativePath\.git")){
+            while($true){
+                Write-Host "`nWhen updating files old files are deleted, everything currently in `"$relativePath`"" -ForegroundColor Yellow
+                Write-Host "Will be deleted, would you like to continue? [y/n]: " -NoNewline -ForegroundColor Yellow
+                $confirmation = $Host.UI.ReadLine()
+                Write-Host ""
 
-            if($confirmation -eq "y"){
-                $fileCount = Get-ChildItem -Path $relativePath -Recurse -Depth 5
+                if($confirmation -eq "y"){
+                    $fileCount = Get-ChildItem -Path $relativePath -Recurse -Depth 5
 
-                if($fileCount.Count -gt 50){
-                    while($true){
-                        Write-Host "There are more than 50 files in `"$relativePath`"," -ForegroundColor Red
-                        Write-Host "EVERYTHING INSIDE WILL BE DELETED ARE YOU SURE YOU WANT TO CONTINUE? [y/n]: " -ForegroundColor Red
-                        $secondConfirmation = $Host.UI.ReadLine()
-                        Write-host ""
+                    if($fileCount.Count -gt 50){
+                        while($true){
+                            Write-Host "There are more than 50 files in `"$relativePath`"," -ForegroundColor Red
+                            Write-Host "EVERYTHING INSIDE WILL BE DELETED ARE YOU SURE YOU WANT TO CONTINUE? [y/n]: " -ForegroundColor Red
+                            $secondConfirmation = $Host.UI.ReadLine()
+                            Write-host ""
 
-                        if($secondConfirmation -eq "y"){
-                            break
-                        }
-                        elseif($secondConfirmation -eq "n"){
-                            Write-Host "No files were updated or deleted...`n"
-                
-                            Quit 
-                        }
-                        else{
-                            Write-Host "Invalid input, valid input is `"y`" (yes) or `"n`" (no)..."
+                            if($secondConfirmation -eq "y"){
+                                break
+                            }
+                            elseif($secondConfirmation -eq "n"){
+                                Write-Host "No files were updated or deleted...`n"
+                            
+                                Quit 
+                            }
+                            else{
+                                Write-Host "Invalid input, valid input is `"y`" (yes) or `"n`" (no)..."
+                            }
                         }
                     }
+                    else{
+                        break
+                    }
+                }
+                elseif($confirmation -eq "n"){
+                    Write-Host "No files were updated or deleted...`n"
+
+                    Quit
                 }
                 else{
-                    break
+                    Write-Host "Invalid input, valid input is `"y`" (yes) or `"n`" (no)..."
                 }
             }
-            elseif($confirmation -eq "n"){
-                Write-Host "No files were updated or deleted...`n"
-                
-                Quit
-            }
-            else{
-                Write-Host "Invalid input, valid input is `"y`" (yes) or `"n`" (no)..."
-            }
+
+            Write-Host "Deleting old files..."
+            Remove-Item -LiteralPath $relativePath -Force -Recurse
+            Start-Sleep 2
+
+            Write-Host "`nUpdating Files..."
+            git clone https://github.com/TheNimble1/FFmpegContextCommands.git $relativePath
+
+            Write-Host ""
         }
+        else{
+            Write-Host "Updating Files..."
+            git pull
 
-        Write-Host "Deleting old files..."
-        Remove-Item -LiteralPath $relativePath -Force -Recurse
-        Start-Sleep 2
-
-        Write-Host "`nUpdating Files..."
-        git clone https://github.com/TheNimble1/FFmpegContextCommands.git $relativePath
+            Write-Host ""
+        }
     }
 }
 
 
 function EditRegistry($registryBool, $relativePath){
     if($registryBool){
-        Write-Host "`nCreating contextual menu items..." -NoNewLine
+        Write-Host "Creating contextual menu items..." -NoNewLine
 
         for($i = 0; $i -lt 3; $i++){
             Write-Host ""

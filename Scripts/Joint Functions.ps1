@@ -1,44 +1,65 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName Microsoft.VisualBasic
 
+Import-Module -Name "$PSScriptRoot\Scripts\Setup Functions.ps1"
 
 function Startup(){
     Write-Host "Starting process and checking for updates...`n"
 
-    $updateBool = $false
-    [Array]$checkForUpdates = git status
+    $gitBool = $true
 
-    foreach($line in $checkForUpdates){
-        if($line -match "Your branch is not up to date"){
-            $updateBool = $true
-        }
+    try{
+        git
+    }
+    catch{
+        $gitBool = $false
     }
 
-    if($updateBool){
-        while($true){
-            Write-Host "Updates are available which could fix existing problems and or add new commands, would you like to update right now? [y/n]: "
-            $updateConfirmation = $Host.UI.ReadLine()
-            Write-host ""
+    if($gitBool){
+        $updateBool = $false
+        git fetch | Out-Null
+        [Array]$checkForUpdates = git status
 
-            if($updateConfirmation -eq 'y'){
-                Write-Host "Starting update process..."
-                
-                Start-Sleep 2
+        foreach($line in $checkForUpdates){
+            if($line -match "Your branch is behind"){
+                $updateBool = $true
+            }
+        }
 
-                Start-Process "$(Split-Path $PSScriptRoot -Parent)\Run Me.bat"
+        if($updateBool){
+            while($true){
+                Write-Host "Updates are available which could fix existing problems and or add new commands, would you like to update right now? [y/n]: "
+                $updateConfirmation = $Host.UI.ReadLine()
+                Write-host ""
 
-                exit
+                if($updateConfirmation -eq 'y'){
+                    Write-Host "Starting update process...`n"
+
+                    Start-Sleep 1
+
+                    git pull
+
+                    EditRegistry $true $(Split-Path $PSScriptRoot -Parent)
+
+                    Write-Host "Updates complete...`n"
+
+                    break
+                }
+                elseif($updateConfirmation -eq 'n'){
+                    break
+                }
+                else{
+                    Write-Host "Invalid input, please input `"y`" (yes) or `"n`" (no)..."
+                }
             }
-            elseif($updateConfirmation -eq 'n'){
-                break
-            }
-            else{
-                Write-Host "Invalid input, please input `"y`" (yes) or `"n`" (no)..."
-            }
+        }
+        else{
+            "All files are up to date...`n"
         }
     }
     else{
-        "All files are up to date...`n"
+        Write-Host "Git is not currently installed on this machine, please re-run the `"$(Split-Path $PSScriptRoot -Parent)\Run me.bat`"" -ForegroundColor Yellow
+        Write-Host "file again and say yes to the first prompt.`n" -ForegroundColor Yellow
     }
 }
 
