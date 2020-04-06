@@ -21,10 +21,10 @@ function Startup(){
 
         Set-Location $parentDirectory
 
-        git fetch | Out-Null
         Write-Host "Before"
-        [Array]$checkForUpdates = git status
+        git fetch | Out-Null
         Write-Host "After"
+        [Array]$checkForUpdates = git status
 
         foreach($line in $checkForUpdates){
             if($line -match "Your branch is behind"){
@@ -41,7 +41,7 @@ function Startup(){
                 if($updateConfirmation -eq 'y'){
                     Write-Host "Starting update process, this process will exit...`n"
 
-                    Start-Sleep 1
+                    Start-Sleep 2
 
                     Start-Process powershell -Verb runAs -WindowStyle Maximized -ArgumentList "-File `"$parentDirectory\Scripts\Setup.ps1`""
 
