@@ -21,7 +21,7 @@ function Startup(){
 
         Set-Location $parentDirectory | Out-Null
 
-        fetch | Out-Null
+        git fetch | Out-Null
         [Array]$checkForUpdates = git status
 
         foreach($line in $checkForUpdates){
