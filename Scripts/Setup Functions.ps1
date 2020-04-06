@@ -53,7 +53,7 @@ function CheckRequiredPackages(){
         }
     }   
     else{
-        Write-Host "Required packages are already installed, would you like to update them?"
+        Write-Host "Required packages are already installed, would you like to update them? (this is optional)"
         $answer = Read-Host "Chocolatey, git, and FFmpeg will be installed / updated [y=yes, n=no]"
         Write-Host ""
         while($true){
