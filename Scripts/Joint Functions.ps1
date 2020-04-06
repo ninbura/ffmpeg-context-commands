@@ -9,7 +9,7 @@ function Startup(){
     $gitBool = $true
 
     try{
-        git
+        git | Out-Null
     }
     catch{
         $gitBool = $false

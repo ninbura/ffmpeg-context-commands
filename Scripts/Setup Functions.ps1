@@ -102,8 +102,8 @@ function UpdateFiles($updateBool, $relativePath){
 
         if(Test-Path -path "$relativePath\.git"){
             while($true){
-                Write-Host "Would you like to update files, or delete existing files and then redownload them? (note: if update doesn't work opt for deletion and re-download)"
-                $userConfirmation = Read-Host "Enter `"u`" to update files without deletion or `"d`" to first delete files and then redownload them [u/d]"
+                Write-Host "Would you like to update files or delete existing files and then redownload them? (note: if update doesn't work opt for deletion and re-download)"
+                $userConfirmation = Read-Host "Enter `"u`" to update files (mutch faster) without deletion or `"d`" to first delete files and then redownload them [u/d]"
                 Write-Host ""
 
                 if($userConfirmation -match "^d$|^u$"){
@@ -117,7 +117,7 @@ function UpdateFiles($updateBool, $relativePath){
 
         if($userConfirmation -eq "d"){
             while($true){
-                Write-Host "`nWhen updating files old files are deleted, everything currently in `"$relativePath`"" -ForegroundColor Yellow
+                Write-Host "When updating files old files are deleted, everything currently in `"$relativePath`"" -ForegroundColor Yellow
                 Write-Host "Will be deleted, would you like to continue? [y/n]: " -NoNewline -ForegroundColor Yellow
                 $confirmation = $Host.UI.ReadLine()
                 Write-Host ""
