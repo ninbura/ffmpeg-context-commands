@@ -9,7 +9,7 @@ function Startup(){
     $gitBool = $true
 
     try{
-        git | Out-Null
+        $null = git | Out-Null
     }
     catch{
         $gitBool = $false
@@ -21,9 +21,7 @@ function Startup(){
 
         Set-Location $parentDirectory
 
-        Write-Host "Before"
-        git fetch | Out-Null
-        Write-Host "After"
+        $null = git fetch | Out-Null
         [Array]$checkForUpdates = git status
 
         foreach($line in $checkForUpdates){
