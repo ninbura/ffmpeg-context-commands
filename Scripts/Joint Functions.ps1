@@ -1,7 +1,6 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName Microsoft.VisualBasic
 
-Import-Module -Name "$PSScriptRoot\Setup Functions.ps1"
 
 function Startup(){
     Write-Host "Starting process and checking for updates...`n"
@@ -21,7 +20,7 @@ function Startup(){
         $parentDirectory = $(Split-Path $PSScriptRoot -Parent)
 
         Set-Location $parentDirectory
-        
+
         git fetch | Out-Null
         [Array]$checkForUpdates = git status
 
@@ -33,7 +32,7 @@ function Startup(){
 
         if($updateBool){
             while($true){
-                Write-Host "Updates are available which could fix existing problems and or add new commands, would you like to update right now? [y/n]: "
+                Write-Host "Updates are available which could fix existing problems and or add new commands, would you like to update right now? [y/n]: " -ForegroundColor Cyan
                 $updateConfirmation = $Host.UI.ReadLine()
                 Write-host ""
 
@@ -42,15 +41,9 @@ function Startup(){
 
                     Start-Sleep 1
 
-                    git pull
-                    EditRegistry $true $(Split-Path $PSScriptRoot -Parent)
+                    Start-Process "$parentDirectory\Scripts\Setup.ps1" -Verb runAs
 
-                    Write-Host "Updates complete..."
-                    Write-Host "Note that if this method of updating didn't work for one reason or another you can run the "
-                    Write-Host "`"$parentDirectory\Run me.bat`" file again an choose to delete and re-download all files."
-                    Write-Host "Updating requries that you restart the command.`n"
-
-                    Quit
+                    exit
                 }
                 elseif($updateConfirmation -eq 'n'){
                     break
