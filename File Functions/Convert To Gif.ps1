@@ -153,11 +153,6 @@ While($keepTweaking.ToUpper() -ne "N"){
     $fileModificationDate = GetModificationDate $newFilePath
     $newFilePath = DeleteExistingFiles "Gif" $newFilePath
     $argumentLists = CreateArgumentLists $filePath $newFilePath $videoProperties $originalVideoProperties
-    
-    foreach($argumentList in $argumentLists){
-        Write-Host $argumentList
-    }
-
     Write-Host "Gif is building..."
     foreach($argumentList IN $argumentLists){runFFCommand $argumentList "ffmpeg"}
     DeleteTempFiles $argumentLists

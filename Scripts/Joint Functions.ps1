@@ -184,22 +184,18 @@ function PrintProperties($originalVideoProperties, $videoProperties, $type, $col
                 Write-Host ""
             }
 
-            if(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -eq "Total_Clip_Duration"){
-                $newDuration = ConvertDuration $originalVideoProperties.Total_Clip_Duration
-    
-                Write-Host "[Total Clip Duraion = $newDuration]" -ForegroundColor $colors[$i]
+            Write-Host "[$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -replace '_',' ') = " -NoNewline -ForegroundColor $colors[$i]
+            Write-Host "$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).value)]" -NoNewline -ForegroundColor $colors[$i]
+            
+            if($i -eq $originalVideoProperties.Count -1){
+                Write-Host ""
+            }
+            elseif(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -match "^Total_Clip_Duration$|^Resolution$"){
+                Write-Host " " -NoNewLine
             }
             else{
-                Write-Host "[$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -replace '_',' ') = " -NoNewline -ForegroundColor $colors[$i]
-                Write-Host "$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).value)]" -NoNewline -ForegroundColor $colors[$i]
-                
-                if($i -eq $originalVideoProperties.Count -1){
-                    Write-Host ""
-                }
-                else{
-                    Write-Host "/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
-                }
-            }            
+                Write-Host "/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
+            }         
         }
     }
     elseif($type -eq 'Current'){
@@ -209,40 +205,34 @@ function PrintProperties($originalVideoProperties, $videoProperties, $type, $col
                 Write-Host ""
             }
 
-            if(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -eq "Total_Clip_Duration"){
-                if($null -eq ($videoProperties.GetEnumerator() | select-object -Index $i).value){
-                    $newDuration = ConvertDuration $originalVideoProperties.Total_Clip_Duration
+            Write-Host "[$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -replace '_',' ') = " -NoNewline -ForegroundColor $colors[$i]
+
+            if($null -eq ($videoProperties.GetEnumerator() | select-object -Index $i).value){
+                Write-Host "$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).value)]" -NoNewline -ForegroundColor $colors[$i]
+                
+                if($i -eq $originalVideoProperties.Count -1){
+                    Write-Host ""
+                }
+                elseif(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -match "^Total_Clip_Duration$|^Resolution$"){
+                    Write-Host " " -NoNewLine
                 }
                 else{
-                    $newDuration = ConvertDuration $videoProperties.Total_Clip_Duration
+                    Write-Host "/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
                 }
-    
-                Write-Host "[Total Clip Duraion = $newDuration]" -ForegroundColor $colors[$i]
             }
             else{
-                Write-Host "[$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).Name -replace '_',' ') = " -NoNewline -ForegroundColor $colors[$i]
-
-                if($null -eq ($videoProperties.GetEnumerator() | select-object -Index $i).value){
-                    Write-Host "$(($originalVideoProperties.GetEnumerator() | select-object -Index $i).value)]" -NoNewline -ForegroundColor $colors[$i]
-                    
-                    if($i -eq $originalVideoProperties.Count -1){
-                        Write-Host ""
-                    }
-                    else{
-                        Write-Host "/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
-                    }
+                Write-Host "$(($videoProperties.GetEnumerator() | select-object -Index $i).value)]" -NoNewline -ForegroundColor $colors[$i]
+                
+                if($i -eq $originalVideoProperties.Count -1){
+                    Write-Host ""
+                }
+                elseif(($videoProperties.GetEnumerator() | select-object -Index $i).Name -match "^Total_Clip_Duration$|^Resolution$"){
+                    Write-Host " " -NoNewLine
                 }
                 else{
-                    Write-Host "$(($videoProperties.GetEnumerator() | select-object -Index $i).value)]" -NoNewline -ForegroundColor $colors[$i]
-                    
-                    if($i -eq $originalVideoProperties.Count -1){
-                        Write-Host ""
-                    }
-                    else{
-                        Write-Host "/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
-                    }
+                    Write-Host "/$($i + 1) " -NoNewline -ForegroundColor $colors[$i]
                 }
-            }            
+            }        
         }
     }
     elseif($type -eq 'Change'){
@@ -381,10 +371,19 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
             PrintProperties $originalVideoProperties $videoProperties 'Original' $colorArray
             PrintProperties $originalVideoProperties $videoProperties 'Current' $colorArray
 
+            $nonOptionCount = 0
+
+            for($i = 0; $i -lt $videoProperties.Count; $i++){
+                if(($videoProperties.GetEnumerator() | select-object -Index $i).Name -eq "Total_Clip_Duration" -or
+                ($videoProperties.GetEnumerator() | select-object -Index $i).Name -eq "Resolution"){
+                    $nonOptionCount += 1
+                }
+            }
+
             [string]$videoOption = Read-Host -Prompt "Would you like to change settings, if so which one? [n=No, ra=revert all, q=quit]"
             Write-Host ""
 
-            if($videoOption.ToUpper() -match "^([1-$($videoProperties.Count - 1)]|N|NO)$"){
+            if($videoOption.ToUpper() -match "^([1-$($videoProperties.Count - $nonOptionCount)]|N)$"){
                 Break
             }
             elseif($videoOption.ToUpper() -eq 'RA'){
@@ -406,7 +405,7 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                 Quit
             }
             else{
-                Write-Host "Invalid input, must be 1-$($videoProperties.Count - 1) or [n, q]...`n"
+                Write-Host "Invalid input, must be 1-$($videoProperties.Count - $nonOptionCount) or [n, q]...`n"
             }
         }
 

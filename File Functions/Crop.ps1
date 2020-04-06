@@ -31,7 +31,29 @@ function CreateArgumentList($filePath, $newFilePath, $videoProperties){
         $cropFilter = @("-vf", "`"crop=$($width):$($height):$($x):$($y)`"")
     }
 
-    $argumentList = @("-loglevel", "error", "-stats", "-i", "`"$filePath`"", "-map", "0:0", "-map", "0:a")
+    if($null -eq $videoProperties.Start_Time){
+        $firstStartTime = $null
+        $secondStartTime = $null
+    }
+    elseif((ConvertTimeStamp $videoProperties.Start_Time) -lt 10){
+        $firstStartTime = $null
+        $secondStartTime = @("-ss", "$($videoProperties.Start_Time)")
+    }
+    else{
+        $firstStartTime = @("-ss", "$(ConvertDuration ((ConvertTimeStamp $videoProperties.Start_Time) - 10))")
+        $secondStartTime = @("-ss", "00:00:10.000")
+    }
+
+    switch($videoProperties.Total_Clip_Duration){
+        {$null -eq $_} {$duration = $null; Break}
+        default {$duration = @("-t", "$($videoProperties.Total_Clip_Duration)"); Break}
+    }
+
+    $argumentList = @("-loglevel", "error", "-stats")
+    foreach($value in $firstStartTime){$argumentList += $value}
+    $argumentList += "-i", "`"$filePath`"", "-map", "0:0", "-map", "0:a", "-movflags", "+faststart"
+    foreach($value in $secondStartTime){$argumentList += $value}
+    foreach($value in $duration){$argumentList += $value}
     foreach($value in $cropFilter){$argumentList += $value}
     $argumentList += "-c:v", "libx264", "-preset", "slow", "-crf", "16", "-c:a copy", "`"$newFilePath`""
 
@@ -47,7 +69,10 @@ $originalVideoProperties = $originalVideoProperties = [ordered]@{
     Right_Crop = '0';
     Top_Crop = '0';
     Bottom_Crop = '0';
-    Resolution = 'Yes'
+    Start_Time = '00:00:00.000';
+    End_Time = 'Yes';
+    Resolution = 'Yes';
+    Total_Clip_Duration = 'Yes'
 }
 $originalVideoProperties = GetOriginalVideoProperties $filePath $originalVideoProperties
 $keepTweaking = ""
