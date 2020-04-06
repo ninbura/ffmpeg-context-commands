@@ -98,7 +98,24 @@ function InstallPackages($installBool){
 
 function UpdateFiles($updateBool, $relativePath){
     if($updateBool){
-        if(!(Test-Path -path "$relativePath\.git")){
+        $userConfirmation = "d"
+
+        if(Test-Path -path "$relativePath\.git"){
+            while($true){
+                Write-Host "Would you like to update files, or delete existing files and then redownload them? (note: if update doesn't work opt for deletion and re-download)"
+                Read-Host "Enter `"u`" to update files without deletion or `"d`" to first delete files and then redownload them [u/d]"
+                Write-Host ""
+
+                if($userConfirmation -match "^d$|^u$"){
+                    break
+                }
+                else{
+                    Write-Host "Invalid input, input should be either `"u`" (update) or `"d`" (delete & re-download)..."
+                }
+            }
+        }
+
+        if(!($userConfirmation -eq "d")){
             while($true){
                 Write-Host "`nWhen updating files old files are deleted, everything currently in `"$relativePath`"" -ForegroundColor Yellow
                 Write-Host "Will be deleted, would you like to continue? [y/n]: " -NoNewline -ForegroundColor Yellow
@@ -153,7 +170,8 @@ function UpdateFiles($updateBool, $relativePath){
         }
         else{
             Write-Host "Updating Files..."
-            git pull
+            Set-Location "$relativePath"
+            git pull --force
 
             Write-Host ""
         }

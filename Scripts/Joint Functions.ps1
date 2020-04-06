@@ -1,7 +1,7 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName Microsoft.VisualBasic
 
-Import-Module -Name "$PSScriptRoot\Scripts\Setup Functions.ps1"
+Import-Module -Name "$PSScriptRoot\Setup Functions.ps1"
 
 function Startup(){
     Write-Host "Starting process and checking for updates...`n"
@@ -17,6 +17,8 @@ function Startup(){
 
     if($gitBool){
         $updateBool = $false
+        $parentDirectory = $(Split-Path $PSScriptRoot -Parent)
+
         git fetch | Out-Null
         [Array]$checkForUpdates = git status
 
@@ -37,11 +39,13 @@ function Startup(){
 
                     Start-Sleep 1
 
+                    Set-Location $parentDirectory
                     git pull
-
                     EditRegistry $true $(Split-Path $PSScriptRoot -Parent)
 
-                    Write-Host "Updates complete...`n"
+                    Write-Host "Updates complete..."
+                    Write-Host "Note that if this method of updating didn't work for one reason or another you can run the "
+                    Write-Host "`"$parentDirectory\Run me.bat`" file again an choose to delete and re-download all files.`n"
 
                     break
                 }
@@ -58,7 +62,7 @@ function Startup(){
         }
     }
     else{
-        Write-Host "Git is not currently installed on this machine, please re-run the `"$(Split-Path $PSScriptRoot -Parent)\Run me.bat`"" -ForegroundColor Yellow
+        Write-Host "Git is not currently installed on this machine, please re-run the `"$parentDirectory\Run me.bat`"" -ForegroundColor Yellow
         Write-Host "file again and say yes to the first prompt.`n" -ForegroundColor Yellow
     }
 }
