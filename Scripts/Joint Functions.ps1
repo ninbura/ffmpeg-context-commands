@@ -81,7 +81,7 @@ function checkFileType($filePath){
 
 
 function InformUser(){
-    Write-Host "Input 'q' at any point to to terminate the program."
+    Write-Host "Input 'q' at any point to to terminate the program.`n"
     Write-Host "File deletion in this program does not completely remove the file from your system, it is moved to the recycle bin and can be recovered." -ForegroundColor Yellow
     Write-Host "UNLESS" -NoNewLine -BackgroundColor DarkRed
     Write-Host " you are agreeing to deletion of a file on a network drive in-which they will be permanently deleted upon affirmative response." -ForegroundColor Yellow
