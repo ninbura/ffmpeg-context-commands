@@ -18,7 +18,4 @@ set relativePath=%~dp0
 
 PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Scripts\Setup.ps1"
 
-Echo Ignore "system cannot find the specified path", error message is by design.
-
-PAUSE
 Exit

@@ -43,8 +43,6 @@ function Startup(){
 
                     Start-Process powershell -Verb runAs -WindowStyle Maximized -ArgumentList "-File `"$parentDirectory\Scripts\Setup.ps1`""
 
-                    read-host ""
-
                     exit
                 }
                 elseif($updateConfirmation -eq 'n'){
