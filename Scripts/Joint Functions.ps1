@@ -20,6 +20,8 @@ function Startup(){
         $updateBool = $false
         $parentDirectory = $(Split-Path $PSScriptRoot -Parent)
 
+        Set-Location $parentDirectory
+        
         git fetch | Out-Null
         [Array]$checkForUpdates = git status
 
@@ -40,7 +42,6 @@ function Startup(){
 
                     Start-Sleep 1
 
-                    Set-Location $parentDirectory
                     git pull
                     EditRegistry $true $(Split-Path $PSScriptRoot -Parent)
 
