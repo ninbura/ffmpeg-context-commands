@@ -3,7 +3,43 @@ Add-Type -AssemblyName Microsoft.VisualBasic
 
 
 function Startup(){
-    Write-Host "Starting process... Input 'q' at any point to to terminate the program.`n"
+    Write-Host "Starting process and checking for updates...`n"
+
+    $updateBool = $false
+    [Array]$checkForUpdates = git status
+
+    foreach($line in $checkForUpdates){
+        if($line -match "Your branch is not up to date"){
+            $updateBool = $true
+        }
+    }
+
+    if($updateBool){
+        while($true){
+            Write-Host "Updates are available which could fix existing problems and or add new commands, would you like to update right now? [y/n]: "
+            $updateConfirmation = $Host.UI.ReadLine()
+            Write-host ""
+
+            if($updateConfirmation -eq 'y'){
+                Write-Host "Starting update process..."
+                
+                Start-Sleep 2
+
+                Start-Process "$(Split-Path $PSScriptRoot -Parent)\Run Me.bat"
+
+                exit
+            }
+            elseif($updateConfirmation -eq 'n'){
+                break
+            }
+            else{
+                Write-Host "Invalid input, please input `"y`" (yes) or `"n`" (no)..."
+            }
+        }
+    }
+    else{
+        "All files are up to date...`n"
+    }
 }
 
 
@@ -24,6 +60,7 @@ function checkFileType($filePath){
 
 
 function InformUser(){
+    Write-Host "Input 'q' at any point to to terminate the program."
     Write-Host "File deletion in this program does not completely remove the file from your system, it is moved to the recycle bin and can be recovered." -ForegroundColor Yellow
     Write-Host "UNLESS" -NoNewLine -BackgroundColor DarkRed
     Write-Host " you are agreeing to deletion of a file on a network drive in-which they will be permanently deleted upon affirmative response." -ForegroundColor Yellow
@@ -427,7 +464,7 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                     break
                 }
                 else{
-                    Write-Host "Invalid input, please in put `"y`" (yes) or `"n`" (no)..."
+                    Write-Host "Invalid input, please input `"y`" (yes) or `"n`" (no)..."
                 }
             }
         }
