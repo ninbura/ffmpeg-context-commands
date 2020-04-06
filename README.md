@@ -22,4 +22,4 @@ Whenever this repo is updated, to pull the new commands or changes as I add them
 Additionally, if there are new updates availble you will be prompted to update each time you run a command, you can always defer if wanted:
 
 # Errors
-If you run into errors at any point during the setup process or while running a command please head to the issues tab on this github page and detail the problem:
+If you run into errors at any point during the setup process or while running a command please head to the issues tab on this github page and detail the problem Test:
