@@ -45,9 +45,10 @@ function Startup(){
 
                     Write-Host "Updates complete..."
                     Write-Host "Note that if this method of updating didn't work for one reason or another you can run the "
-                    Write-Host "`"$parentDirectory\Run me.bat`" file again an choose to delete and re-download all files.`n"
+                    Write-Host "`"$parentDirectory\Run me.bat`" file again an choose to delete and re-download all files."
+                    Write-Host "Updating requries that you restart the command.`n"
 
-                    break
+                    Quit
                 }
                 elseif($updateConfirmation -eq 'n'){
                     break
