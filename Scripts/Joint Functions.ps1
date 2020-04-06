@@ -8,12 +8,12 @@ function Startup(){
 
     $gitBool = $true
 
-    try{
-        git | Out-Null
-    }
-    catch{
-        $gitBool = $false
-    }
+    # try{
+        git # | Out-Null
+    # }
+    # catch{
+    #     $gitBool = $false
+    # }
 
     if($gitBool){
         $updateBool = $false
