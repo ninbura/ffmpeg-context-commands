@@ -32,6 +32,7 @@ function CheckRequiredPackages(){
     }
 
     if(!($chocoBool) -or !($gitBool) -or !($ffmpegBool)){
+        Write-Host "Step 1/2" -ForegroundColor Cyan
         Write-Host "Required packages are not installed, would you like to install them?"
         $answer = Read-Host "Chocolatey, git, and FFmpeg will be installed / updated [y=yes, n=no]"
         Write-Host ""
@@ -99,6 +100,8 @@ function InstallPackages($installBool){
 
 function UpdateFiles($updateBool, $relativePath){
     if($updateBool){
+        Write-Host "Step 1/2" -ForegroundColor Cyan
+        
         $userConfirmation = "d"
 
         if(Test-Path -path "$relativePath\.git"){
