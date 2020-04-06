@@ -115,7 +115,7 @@ function UpdateFiles($updateBool, $relativePath){
             }
         }
 
-        if(!($userConfirmation -eq "d")){
+        if($userConfirmation -eq "d"){
             while($true){
                 Write-Host "`nWhen updating files old files are deleted, everything currently in `"$relativePath`"" -ForegroundColor Yellow
                 Write-Host "Will be deleted, would you like to continue? [y/n]: " -NoNewline -ForegroundColor Yellow
