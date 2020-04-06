@@ -6,6 +6,7 @@ Import-Module -Name "$PSScriptRoot\Setup Functions.ps1"
 function Startup(){
     Write-Host "Starting process and checking for updates...`n"
 
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
     $gitBool = $true
 
     # try{

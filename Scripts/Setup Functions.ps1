@@ -96,6 +96,7 @@ function InstallPackages($installBool){
     }
 }
 
+
 function UpdateFiles($updateBool, $relativePath){
     if($updateBool){
         $userConfirmation = "d"
