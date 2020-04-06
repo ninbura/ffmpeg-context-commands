@@ -32,7 +32,7 @@ function Startup(){
 
         if($updateBool){
             while($true){
-                Write-Host "Updates are available which could fix existing problems and or add new commands, would you like to update right now? [y/n]: " -NoNewLine -ForegroundColor Cyan
+                Write-Host "`nUpdates are available which could fix existing problems and or add new commands, would you like to update right now? [y/n]: " -NoNewLine -ForegroundColor Cyan
                 $updateConfirmation = $Host.UI.ReadLine()
                 Write-host ""
 
