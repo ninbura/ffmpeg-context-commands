@@ -33,6 +33,7 @@ function CheckFiles($fileArray){
 function VerifyDesire($fileArray){
     while($true){
         Write-Host $fileArray
+        Write-Host ""
         $userConfirmation = Read-Host "Are you sure you want to concatenate the above files?"\
         Write-Host ""
         
