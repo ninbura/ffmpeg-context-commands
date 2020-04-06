@@ -108,7 +108,7 @@ function UpdateFiles($updateBool, $relativePath){
         if(Test-Path -path "$relativePath\.git"){
             while($true){
                 Write-Host "Would you like to update files or delete existing files and then redownload them? (note: if update doesn't work opt for deletion and re-download)"
-                $userConfirmation = Read-Host "Enter `"u`" to update files (mutch faster) without deletion or `"d`" to first delete files and then redownload them [u/d]"
+                $userConfirmation = Read-Host "Enter `"u`" to update files (much faster) without deletion or `"d`" to first delete files and then redownload them [u/d]"
                 Write-Host ""
 
                 if($userConfirmation -match "^d$|^u$"){
