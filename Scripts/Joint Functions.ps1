@@ -37,7 +37,7 @@ function Startup(){
                 Write-host ""
 
                 if($updateConfirmation -eq 'y'){
-                    Write-Host "Starting update process...`n"
+                    Write-Host "Starting update process, this process will exit...`n"
 
                     Start-Sleep 1
 
