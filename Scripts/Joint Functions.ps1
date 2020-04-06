@@ -9,7 +9,7 @@ function Startup(){
     $gitBool = $true
 
     try{
-        $null = git | Out-Null
+        git | Out-Null
     }
     catch{
         $gitBool = $false
@@ -19,9 +19,9 @@ function Startup(){
         $updateBool = $false
         $parentDirectory = $(Split-Path $PSScriptRoot -Parent)
 
-        Set-Location $parentDirectory
+        Set-Location $parentDirectory | Out-Null
 
-        $null = git fetch | Out-Null
+        fetch | Out-Null
         [Array]$checkForUpdates = git status
 
         foreach($line in $checkForUpdates){
