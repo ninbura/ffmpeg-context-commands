@@ -30,6 +30,26 @@ function CheckFiles($fileArray){
     }
 }
 
+function VerifyDesire($fileArray){
+    while($true){
+        Write-Host $fileArray
+        $userConfirmation = Read-Host "Are you sure you want to concatenate the above files?"\
+        Write-Host ""
+        
+        if($userConfirmation -eq "y"){
+            break
+        }
+        elseif($userConfirmation -eq "n"){
+            Write-Host "No files were concatenated or generated...`n"
+            
+            Quit
+        }
+        else{
+            Write-Host "Invalid input, please input `"y`" (yes) or `"n`" (no)..."
+        }
+    }
+}
+
 
 StartUp
 Write-Host "The purpose of this program is to concatenate like videos in a given directory." -ForegroundColor Cyan
@@ -40,6 +60,7 @@ Write-Host "Lastly, video files will be concatenated in alphabetical order, so p
 InformUser
 $fileArray = Get-ChildItem -Path $filePath -File -Recurse | Select-Object -ExpandProperty FullName | ForEach-Object {$_.ToString()}
 CheckFiles $fileArray
+VerifyDesire $fileArray
 $newFilePath = GetNewFilePath "Concatenated" $fileArray[0]
 $fileModificationDate = GetModificationDate $newFilePath
 $newFilePath = DeleteExistingFiles "Concatenated" $newFilePath
