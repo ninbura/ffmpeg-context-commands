@@ -3,7 +3,7 @@ FFmpeg Context Commands is a suite of of FFmpeg Commands run by Windows Powershe
 variety of ways. For example in regards to video - playing, compressing, cutting, changing resolution, changing framerate, converting, and
 more.
 
-#Setup
+# Setup
 To setup these commands all you need to do is download the files from this repository, whether that be via git clone or simply donwloading 
 the zip folder, extract the main folder to a location of your choosing, and run the `Run Me.bat` file as administrator. It doesn't matter 
 what you name the folder you store the contents of this project in, but it's worth noting that wherever you choose to store it, each time 
