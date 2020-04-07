@@ -11,14 +11,14 @@ Extract the main folder to a location of your choosing, feel free to rename the 
 Make sure you store the main guts in their own folder, and not directly in a directory with other files as this could lead to accidental deletion of files you want to keep:
 
 
-Finally run the `Run Me.bat` file as administrator and follow the prompts, the first step is required on initail install unless you already have Chocolatey, FFmpeg, & Git installed:
+Finally run the `Run Me.bat` file as administrator and follow the prompts, the first step is required on initial install unless you already have Chocolatey, FFmpeg, & Git installed:
 
 
 The second step, the first time you run the `Run Me.bat` file will inform you that old files will be deleted and then updated, this is especially note worthy because if you extract the guts of this folder directly into a folder with other files those files will also be deleted as noted earlier:
 
 
 Once you've run the `Run me.bat` file and followed the resulting prompts, assuming there were no errors, the commands will have been added to your context menu when right clicking a file or folder (depending on the command) in Windows Explorer:
-![Alt Text](https://i.postimg.cc/RVLpfj9m/MW00-Cropped-Gif.gif)
+
 
 Everytime you run a command it will check for updates, if it finds there are new updates it will prompt you to run through the update process again (optional). However, this time you don't have to delete old files, you can simply update them via the second step:
 

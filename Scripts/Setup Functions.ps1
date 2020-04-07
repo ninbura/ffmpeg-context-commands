@@ -36,7 +36,7 @@ function CheckRequiredPackages(){
     if(!($chocoBool) -or !($gitBool) -or !($ffmpegBool)){
         Write-Host "Required packages are not installed, would you like to install them?"
         $answer = Read-Host "Chocolatey, git, and FFmpeg will be installed / updated [y=yes, n=no]"
-        Write-Host ""
+        Write-Host " "
         while($true){
             if($answer.ToUpper() -eq "Y"){
                 $boolArray[0] = $true
@@ -57,7 +57,7 @@ function CheckRequiredPackages(){
     else{
         Write-Host "Required packages are already installed, would you like to update them? (this is optional)"
         $answer = Read-Host "Chocolatey, git, and FFmpeg will be installed / updated [y=yes, n=no]"
-        Write-Host ""
+        Write-Host " "
         while($true){
             if($answer.ToUpper() -eq "Y"){
                 $boolArray[0] = $true
@@ -96,7 +96,7 @@ function InstallPackages($installBool){
 
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User") 
 
-        Write-Host ""
+        Write-Host " "
     }
 }
 
@@ -173,14 +173,14 @@ function UpdateFiles($updateBool, $relativePath){
             Write-Host "`nUpdating Files..."
             git clone https://github.com/TheNimble1/FFmpegContextCommands.git $relativePath
 
-            Write-Host ""
+            Write-Host " "
         }
         else{
             Write-Host "Updating Files..."
             Set-Location "$relativePath"
             git pull --force
 
-            Write-Host ""
+            Write-Host " "
         }
     }
 }
@@ -191,7 +191,7 @@ function EditRegistry($registryBool, $relativePath){
         Write-Host "Creating contextual menu items..." -NoNewLine
 
         for($i = 0; $i -lt 3; $i++){
-            Write-Host ""
+            Write-Host " "
         
             if($i -eq 0){
                 $contextType = "*\shell"
@@ -259,7 +259,7 @@ function EditRegistry($registryBool, $relativePath){
             }
         }
 
-        Write-Host ""
+        Write-Host " "
     }
     else{
         Write-Host "`nRequired packages are not installed to add contextual menu items, run this batch file again if you'd like to retry setup."
