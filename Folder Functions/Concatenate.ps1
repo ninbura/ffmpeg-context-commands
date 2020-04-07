@@ -32,9 +32,13 @@ function CheckFiles($fileArray){
 
 function VerifyDesire($fileArray){
     while($true){
-        Write-Host $fileArray
+        
+        foreach($file in $fileArray){
+            Write-Host $file
+        }
+
         Write-Host ""
-        $userConfirmation = Read-Host "Are you sure you want to concatenate the above files?"\
+        $userConfirmation = Read-Host "Are you sure you want to concatenate the above files?"
         Write-Host ""
         
         if($userConfirmation -eq "y"){
