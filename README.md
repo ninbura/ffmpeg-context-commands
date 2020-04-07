@@ -29,4 +29,4 @@ If you're having strange issues and want to reload all the files you can run the
 If all else fails you have the option to completely delete the directory and redownload the zip from this page.
 
 # Errors
-If you run into errors at any point during the setup process or while running a command please head to the issues tab on this github page and detail the problem:
+If you run into errors at any point during the setup process or while running a command please head to the issues tab on this github page and detail the problem test:
