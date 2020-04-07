@@ -95,6 +95,8 @@ function InstallPackages($installBool){
         choco install git -y
 
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User") 
+
+        Write-Host ""
     }
 }
 
