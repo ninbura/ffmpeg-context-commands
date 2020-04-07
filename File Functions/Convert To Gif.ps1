@@ -57,7 +57,7 @@ function CreateArgumentLists($filePath, $newFilePath, $videoProperties, $origina
         $argumentLists[0] += "-i", "`"$filePath`"", "-map", "0:0"
         foreach($value in $secondStartTime){$argumentLists[0] += $value}
         foreach($value in $duration){$argumentLists[0] += $value}
-        $argumentLists[0] += "-c", "copy", "`"$tempFilePath`""
+        $argumentLists[0] += "-c:v", "libx264", "-preset", "slow", "-crf", "16", "`"$tempFilePath`""
 
         $tempPath = $tempFilePath
         $arrIndex += 1
