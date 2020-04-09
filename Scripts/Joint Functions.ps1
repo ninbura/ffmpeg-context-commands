@@ -220,8 +220,11 @@ function GetOriginalVideoProperties($filePath, $originalVideoProperties){
         | select-string -Pattern "(codec_type=audio)" `
         | ForEach-Object {$_.ToString().Split(" ")}
 
-    if($AudioTrackArray.Count -gt 0){
+    if($AudioTrackArray.Count -eq 1){
         $originalVideoProperties.Audio_Track_Number = "1/$($AudioTrackArray.Count)"
+    }
+    elseif($AudioTrackArray.Count -gt 1){
+        $originalVideoProperties.Audio_Track_Number = "a/$($AudioTrackArray.Count)"
     }
     elseif($AudioTrackArray.Count -eq 0 -and $originalVideoProperties.Audio_Track_Number -eq 'Yes'){
         $originalVideoProperties.Remove("Audio_Track_Number")
@@ -812,17 +815,21 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
         }
         elseif(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Audio_Track_Number"){
             while($true){
-                [string]$audioTrackNumber = Read-Host -Prompt "Input which audio track you'd like from the old video in the new video (example: 2), 'c' to cancel, or 'r' to revert to the first audio track"
+                [string]$audioTrackNumber = Read-Host -Prompt "Input which audio track (or `"a`" for all) you'd like from the old video in the new video (example: 2, a), 'c' to cancel, or 'r' to revert to the first audio track"
                 Write-Host ""
 
                 $audioTrackCount = [Regex]::Match($originalVideoProperties.Audio_Track_Number, "(?<=\/).*").Value
 
-                if($audioTrackNumber -match "^[1-$audioTrackCount]$"){
+                if($audioTrackNumber -match "^([1-$audioTrackCount]|a)$"){
                     if($audioTrackNumber -eq $originalVideoProperties.Audio_Track_Number){
                         $videoProperties.Audio_Track_Number = $null
                     }
                     else{
-                        $videoProperties.Audio_Track_Number = $audioTrackNumber
+                        $videoProperties.Audio_Track_Number = "$audioTrackNumber/$([regex]::match($originalVideoProperties.Audio_Track_Number, "(?<=\/).*").Value)"
+                    }
+
+                    if($audioTrackNumber -eq "a"){
+                        $videoProperties.Audio_Level = $null
                     }
 
                     PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
@@ -846,6 +853,10 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                         else{
                             $videoProperties.Audio_Track_Number = $null
                         }
+
+                        if($videoProperties.Audio_Track_Number -match "^$|^a$"){
+                            $videoProperties.Audio_Level = $null
+                        }
                     }
 
                     PrintProperties `
@@ -857,61 +868,66 @@ function GetVideoProperties($originalVideoProperties, $videoProperties, $presetV
                     break
                 }
                 else{
-                    Write-Host "Invalid audio track number, audio track number cannot be greater than the total number of tracks in a video file (" -NoNewline
+                    Write-Host "Invalid audio track number, audio track number can be `"a`" for all and cannot be greater than the total number of tracks in a video file (" -NoNewline
                     Write-Host "$audioTrackCount" -NoNewline -ForegroundColor Yellow
                     Write-Host "). `n"
                 }
             }
         }
         elseif(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Audio_Level"){
-            Write-Host "Audio level is a desired increase or decrease of audio volume in decibels (examples: 22dB, -6dB)." -ForegroundColor Yellow
-            
-            while($true){
-                [string]$audioLevel = Read-Host -Prompt "Input which audio track you'd like in the new video (example: 2), 'c' to cancel, or 'r' to revert to the first audio track"
-                Write-Host ""
+            if(!($videoProperties.Audio_Track_Number -match "^$|^a$")){
+                Write-Host "Audio level is a desired increase or decrease of audio volume in decibels (examples: 22dB, -6dB)." -ForegroundColor Yellow
+                
+                while($true){
+                    [string]$audioLevel = Read-Host -Prompt "Input which audio track you'd like in the new video (example: 2), 'c' to cancel, or 'r' to revert to the first audio track"
+                    Write-Host ""
 
-                if($audioLevel -match '^-?([0-9]*)$'){
-                    if($audioLevel -eq $originalVideoProperties.Audio_Level){
-                        $videoProperties.Audio_Level = $null
-                    }
-                    else{
-                        $videoProperties.Audio_Level = $audioLevel
-                    }
-
-                    PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
-                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
-                    'Change' `
-                    $colorArray[$videoOption - 1]
-
-                    Break
-                }
-                elseif($audioLevel.ToUpper() -match '^(C|R|Q)$'){
-                    switch($audioLevel.ToUpper()){
-                        'C' {$option = "Cancel"; break}
-                        'R' {$option = "Revert"; break}
-                        'Q' {Quit; break}
-                    }
-
-                    if($audioLevel.ToUpper() -eq "R"){
-                        if($null -ne $presetVideoProperties){
-                            $videoProperties.Audio_Level = $presetVideoProperties.Audio_Level
-                        }
-                        else{
+                    if($audioLevel -match '^-?([0-9]*)$'){
+                        if($audioLevel -eq $originalVideoProperties.Audio_Level){
                             $videoProperties.Audio_Level = $null
                         }
-                    }
-                    
-                    PrintProperties `
-                    ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
-                    ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
-                    $option `
-                    $colorArray[$videoOption - 1]
+                        else{
+                            $videoProperties.Audio_Level = $audioLevel
+                        }
 
-                    break
+                        PrintProperties ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                        ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                        'Change' `
+                        $colorArray[$videoOption - 1]
+
+                        Break
+                    }
+                    elseif($audioLevel.ToUpper() -match '^(C|R|Q)$'){
+                        switch($audioLevel.ToUpper()){
+                            'C' {$option = "Cancel"; break}
+                            'R' {$option = "Revert"; break}
+                            'Q' {Quit; break}
+                        }
+
+                        if($audioLevel.ToUpper() -eq "R"){
+                            if($null -ne $presetVideoProperties){
+                                $videoProperties.Audio_Level = $presetVideoProperties.Audio_Level
+                            }
+                            else{
+                                $videoProperties.Audio_Level = $null
+                            }
+                        }
+
+                        PrintProperties `
+                        ($originalVideoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                        ($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)) `
+                        $option `
+                        $colorArray[$videoOption - 1]
+
+                        break
+                    }
+                    else{
+                        Write-Host "Invalid audio level, audio level must be a positive or negative number.`n"
+                    }
                 }
-                else{
-                    Write-Host "Invalid audio level, audio level must be a positive or negative number.`n"
-                }
+            }
+            else{
+                Write-Host "Audio level can only be adjust if there is only one audio track selected for output, switch audio track number from `"a`" if you want to adjust volume.`n" -ForegroundColor Yellow
             }
         }
         elseIf(($videoProperties.GetEnumerator() | select-object -Index ($videoOption - 1)).Name -eq "Left_Crop"){

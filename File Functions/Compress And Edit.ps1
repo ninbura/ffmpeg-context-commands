@@ -62,7 +62,7 @@ function CreateArgumentList($filePath, $newFilePath, $videoProperties, $original
 
     if($videoProperties.Contains("Audio_Track_Number")){
         if($null -eq $videoProperties.Audio_Track_Number){
-            $audioTrackMap = @("-map", "0:1")
+            $audioTrackMap = @("-map", "0:a")
         }
         else{
             $audioTrackMap = @("-map", "0:$([Regex]::Match($videoProperties.Audio_Track_Number, "^([0-9])*(?=\/)").Value)")
