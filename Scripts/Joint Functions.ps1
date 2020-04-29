@@ -139,7 +139,7 @@ function GetOriginalVideoProperties($filePath, $originalVideoProperties){
     }
 
     $ffpinfo = New-Object System.Diagnostics.ProcessStartInfo
-    $ffpinfo.FileName = "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin\ffprobe.exe"
+    $ffpinfo.FileName = "$(Split-Path $PSScriptRoot -Parent)\FFmpeg\bin\ffprobe.exe"
     $ffpinfo.RedirectStandardError = $true
     $ffpinfo.RedirectStandardOutput = $true
     $ffpinfo.UseShellExecute = $false
@@ -1610,7 +1610,7 @@ function DeleteExistingFiles($tag, $newFilePath){
 
 
 function runFFCommand($argumentList, $program){
-    Start-Process -FilePath "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin\$program.exe" -Wait -NoNewWindow -ArgumentList $argumentList
+    Start-Process -FilePath "$(Split-Path $PSScriptRoot -Parent)\ffmpeg\bin\$program.exe" -Wait -NoNewWindow -ArgumentList $argumentList
 }
 
 

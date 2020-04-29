@@ -25,17 +25,11 @@ function CheckRequiredPackages(){
         $gitBool = $false
     }
 
-    if(!(Test-Path "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin\ffmpeg.exe") -or 
-        !(Test-Path "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin\ffplay.exe") -or 
-        !(Test-Path "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin\ffprobe.exe")){
-        $ffmpegBool = $false
-    }
-
     Write-Host "Step 1/2" -ForegroundColor Cyan
 
-    if(!($chocoBool) -or !($gitBool) -or !($ffmpegBool)){
+    if(!($chocoBool) -or !($gitBool)){
         Write-Host "Required packages are not installed, would you like to install them?"
-        $answer = Read-Host "Chocolatey, git, and FFmpeg will be installed / updated [y=yes, n=no]"
+        $answer = Read-Host "Chocolatey and git, will be installed / updated [y=yes, n=no]"
         Write-Host " "
         while($true){
             if($answer.ToUpper() -eq "Y"){
@@ -56,7 +50,7 @@ function CheckRequiredPackages(){
     }   
     else{
         Write-Host "Required packages are already installed, would you like to update them? (this is optional)"
-        $answer = Read-Host "Chocolatey, git, and FFmpeg will be installed / updated [y=yes, n=no]"
+        $answer = Read-Host "Chocolatey and git, will be installed / updated [y=yes, n=no]"
         Write-Host " "
         while($true){
             if($answer.ToUpper() -eq "Y"){
@@ -91,7 +85,6 @@ function InstallPackages($installBool){
         
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
-        choco install ffmpeg -y
         choco install git -y
 
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User") 
