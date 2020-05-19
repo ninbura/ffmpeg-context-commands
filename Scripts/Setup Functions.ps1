@@ -124,12 +124,6 @@ function UpdateFiles($updateBool, $relativePath){
                 if($confirmation -eq "y"){
                     $fileCount = Get-ChildItem -Path $relativePath -Recurse -Depth 5
 
-                    $fileCount.Count
-
-                    $Host.UI.ReadLine()
-
-                    exit
-
                     if($fileCount.Count -gt 100){
                         while($true){
                             Write-Host "There are more than 50 files in `"$relativePath`"," -ForegroundColor Red
