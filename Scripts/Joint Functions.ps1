@@ -2,6 +2,14 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName Microsoft.VisualBasic
 
 
+function Quit(){
+    write-host('Closing program, press [Enter] to exit...') -NoNewLine
+    $Host.UI.ReadLine()
+
+    exit
+}
+
+
 function Startup(){
     Write-Host "Starting process and checking for updates...`n"
 
@@ -87,14 +95,6 @@ function InformUser(){
     Write-Host " you are agreeing to deletion of a file on a network drive in-which they will be permanently deleted upon affirmative response." -ForegroundColor Yellow
     Write-Host "This program is not compatible with all file types, such as Matroska (.mkv), as it does not have the necessary header information." -ForegroundColor Yellow
     Write-Host "It is possible that there are other file types incompatible with this program that can be excluded from operation in the future.`n" -ForegroundColor Yellow
-}
-
-
-function Quit(){
-    write-host('Closing program, press [Enter] to exit...') -NoNewLine
-    $Host.UI.ReadLine()
-
-    exit
 }
 
 

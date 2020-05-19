@@ -1,0 +1,2 @@
+Default Output Path = \\192.168.2.2\ASexyServer\Videos\Saved Clips;
+Use Default Output Path = y;

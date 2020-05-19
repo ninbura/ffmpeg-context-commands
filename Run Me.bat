@@ -16,6 +16,6 @@ if %errorLevel% == 0 (
 
 set relativePath=%~dp0
 
-PowerShell -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Scripts\Setup.ps1"
+%SYSTEMROOT%\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoProfile -ExecutionPolicy Bypass -File "%relativePath%Scripts\Setup.ps1"
 
 Exit
